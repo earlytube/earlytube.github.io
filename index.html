@@ -96,8 +96,8 @@
   .now-playing{font-size:12px;color:#666;margin-bottom:12px;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;}
   .btn-close{width:100%;padding:14px;border-radius:10px;background:#1C1C1E;border:1px solid #2C2C2E;color:white;font-size:14px;font-weight:500;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
   .btn-close svg{width:14px;height:14px;fill:#999;}
-  #pin-overlay{display:none;position:fixed;inset:0;background:rgba(10,10,15,0.92);z-index:100;flex-direction:column;align-items:center;justify-content:center;gap:18px;}
-  .pin-icon{width:52px;height:52px;background:#1C1C2E;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;}
+  #report-modal{display:none;position:fixed;inset:0;background:rgba(10,10,15,0.85);z-index:200;align-items:flex-end;justify-content:center;}
+  #pin-overlay{display:none;position:fixed;inset:0;background:rgba(10,10,15,0.92);z-index:100;flex-direction:column;align-items:center;justify-content:center;gap:18px;}  .pin-icon{width:52px;height:52px;background:#1C1C2E;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;}
   .pin-icon svg{width:22px;height:22px;fill:#9CA3AF;}
   #pin-overlay h2{font-size:18px;font-weight:600;color:white;}
   #pin-overlay p{font-size:13px;color:#9CA3AF;margin-top:-8px;}
@@ -235,8 +235,8 @@
   <div class="pin-hint">Default PIN is 1234 · Change in Settings</div>
 </div>
 
-<div id="report-modal">
-  <div class="modal-box">
+<div id="report-modal" style="display:none;position:fixed;inset:0;background:rgba(10,10,15,0.85);z-index:200;align-items:flex-end;justify-content:center;pointer-events:none;">
+  <div class="modal-box" style="pointer-events:all;">
     <div class="modal-title">Suggest a replacement</div>
     <div class="modal-sub" id="report-sub">Found a broken video? Suggest a better one and we'll review it.</div>
     <label class="modal-label">Your email</label>
