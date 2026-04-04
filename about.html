@@ -91,6 +91,17 @@
 </head>
 <body>
 
+<div id="google_translate_element" style="position:fixed;top:12px;right:12px;z-index:999;"></div>
+<script>
+function googleTranslateElementInit(){
+  new google.translate.TranslateElement({
+    pageLanguage:'en',
+    layout:google.translate.TranslateElement.InlineLayout.SIMPLE,
+    autoDisplay:false
+  },'google_translate_element');
+}
+</script>
+<script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 <nav>
   <a class="nav-brand" href="index.html">
     <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
@@ -108,19 +119,25 @@
 <div class="divider"><hr/></div>
 
 <div class="story">
-  <p>My child is on the autism spectrum. Like many kids, they discovered YouTube — and with it, the rewind button. What followed was a pattern I couldn't unsee: the same one-second clip, over and over and over. Not watching a video. <strong>Stimming on it.</strong></p>
+  <p>My son is 16 now. When he was 11 months old, he picked up a phone at a family party and everyone gasped at how fast his little fingers moved across the screen. <strong>They wowed. We all did.</strong> Fifteen years later, people still say it. But it doesn't feel the same anymore.</p>
 
-  <p>The behaviour had a name. It had a cause. And by the time I understood what was happening, the habit was already deeply set. My child was too smart, too used to it. There was no going back.</p>
+  <p>He is on the autism spectrum. And somewhere along the way, YouTube became something more than entertainment. The rewind button — that tiny, innocent slider — became a loop he couldn't escape. The same one second, over and over. Not watching. <strong>Stimming. For hours.</strong> And if I didn't intervene — who knows. Maybe all day.</p>
+
+  <p>I want to be careful here. I know stimming serves a purpose. I know he can't simply choose to stop. I'm not angry at him — I never was. But I've spent fifteen years watching those fast fingers pull him further from the world around him. And I've wondered, quietly and constantly: <strong>what if he'd never been introduced to it?</strong></p>
 
   <div class="highlight">
-    <p>"But what about the child who was diagnosed yesterday? What if they were never introduced to the rewind button in the first place? <strong>What if they never know?</strong>"</p>
+    <p>"What if the rewind button simply didn't exist for him? Would he be more present? More available? Would things be different? I'll never know. And yes — he might still be stimming. But maybe in the real world. With real people. And that would have been everything. He is too smart and it is too late for him — but if this helps even one other child, it was worth every sleepless night."</p>
   </div>
 
-  <p>That question sat with me for a while. Then one night, I decided to stop waiting for someone else to build it. I opened my laptop and didn't stop until EarlyTube existed.</p>
+  <p>About seven or eight years ago, so frustrated I couldn't sleep, I tried to build this app myself. I failed. I'm not a developer. Around the same time I watched a video of Sundar Pichai — the CEO of Google — talking about accountability. About how Google was taking responsibility in the world. And I thought: <strong>someone should tell him about this.</strong></p>
 
-  <p>It's not a cure. It's not therapy. It's a small, free tool — a version of YouTube that simply <strong>removes the controls</strong>. No rewind. No skip. No progress bar to scrub. Just the video, playing forward, as it was meant to be watched.</p>
+  <p>But then I thought about what it's actually like to be a parent of a child with profound autism. You are not writing emails to CEOs. You are surviving. Every single day is triage — therapies, schools, meltdowns, paperwork, fighting for services that should just exist. <strong>The small things never make it to the top of the list.</strong> And this — a rewind button, a stimming behaviour, a screen habit — probably sounds small to anyone who hasn't lived it.</p>
 
-  <p>For parents of newly diagnosed children, this could matter enormously. The habit that took hold in my child might never form in yours — <strong>if you start here, before they know there's anything else.</strong></p>
+  <p>It isn't small. But I understand why it was never considered. Parents like us are too exhausted to advocate for the things that seem invisible. And companies like YouTube never had to look closely enough to see it. We have always been invisible — in waiting rooms, in school meetings, in policy decisions, in product roadmaps. In so many facets of life, we are the afterthought. If we are thought of at all.</p>
+
+  <p><strong>That email is still sitting in my drafts folder.</strong> Last night, with the help of AI, I finally built what I couldn't build alone. EarlyTube is that email to Sundar, finally sent. Just not to him.</p>
+
+  <p>It's not a cure. It's not therapy. It's a small, free tool — a version of YouTube that simply <strong>removes the controls</strong>. No rewind. No skip. No progress bar. Just the video, playing forward. For every child diagnosed today, tomorrow, next year — before the habit forms. <strong>Before they know there's anything else.</strong></p>
 </div>
 
 <div class="stats">
@@ -129,8 +146,8 @@
     <div class="stat-label">night to build</div>
   </div>
   <div class="stat">
-    <div class="stat-number">£0</div>
-    <div class="stat-label">forever free</div>
+    <div class="stat-number">Free</div>
+    <div class="stat-label">forever. no fees. ever.</div>
   </div>
   <div class="stat">
     <div class="stat-number">0</div>
@@ -151,7 +168,7 @@
       <div class="why-icon red">📌</div>
       <div>
         <div class="why-title">Parent PIN to exit</div>
-        <div class="why-text">Closing a video requires a 4-digit PIN. The child stays in a safe, controlled viewing experience until a parent decides otherwise.</div>
+        <div class="why-text">Closing a video requires a 4-digit PIN. The child stays in a safe, controlled viewing experience until a parent decides otherwise. Default PIN is <strong>1234</strong> — change it in Settings.</div>
       </div>
     </div>
     <div class="why-item">
@@ -175,16 +192,16 @@
   <div class="night-card">
     <div class="night-badge">One night</div>
     <h3>Yes, this was really built overnight.</h3>
-    <p>EarlyTube went from an idea to a live, working app in a single evening. No team, no funding, no office. Just a parent, a laptop, and the kind of motivation that only comes from loving someone who needs this.</p>
+    <p>Seven years ago I tried to build this and couldn't. Last night, with the help of AI, it finally exists. No team, no funding, no coding experience. Just a parent who refused to let the idea die — and a tool that was finally ready to help. Even if not my child.<br><br><strong>You don't have the excuse I had then — or now. Try it.</strong></p>
   </div>
 </div>
 
 <div class="donate-section">
   <div class="donate-card">
-    <div class="donate-emoji">🥤</div>
-    <h3>Buy me a juice?</h3>
-    <p>EarlyTube is completely free and always will be. But if it's helped your family — or you just like the idea — you're welcome to buy me a juice. (I don't drink coffee. Chipotle also accepted.)</p>
-    <a class="donate-btn" href="https://ko-fi.com/earlytube" target="_blank">Buy me a juice 🥤</a>
+    <div class="donate-emoji">☕</div>
+    <h3>This exists because AI made it possible.</h3>
+    <p>Built in one night with AI. Any support goes towards the domain and keeping the AI going — so EarlyTube keeps improving. The goal is simple: to make this unnecessary the day YouTube builds it themselves. <strong>For free.</strong> That would be the win. Because no parent should have to pay to help their child.</p>
+    <a class="donate-btn" href="https://ko-fi.com/earlytube" target="_blank">Support if you want to 🙏</a>
     <div class="donate-note">No pressure. Seriously. Go use the app instead.</div>
   </div>
 </div>
