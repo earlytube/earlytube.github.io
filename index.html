@@ -383,6 +383,16 @@ logo.addEventListener('mousedown',function(){logoTimer=setTimeout(requestSetting
 logo.addEventListener('mouseup',function(){clearTimeout(logoTimer);});
 
 loadVideos();
+
+// Intercept browser back button
+history.pushState(null, '', window.location.href);
+window.addEventListener('popstate', function(){
+  history.pushState(null, '', window.location.href);
+  var player = document.getElementById('player-screen');
+  if(player && player.style.display === 'flex'){
+    requestClose();
+  }
+});
 </script>
 </body>
 </html>
