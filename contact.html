@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>EarlyTube — Contact & Feedback</title>
+<link rel="apple-touch-icon" href="icon.png"/>
+<link rel="icon" type="image/png" href="icon.png"/>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2DFE2R37G1"></script>
+<script>
+  window.dataLayer=window.dataLayer||[];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js',new Date());
+  gtag('config','G-2DFE2R37G1');
+</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+  :root{
+    --red:#E53935;--red-light:#FFEBEE;
+    --bg:#F7F8FA;--card:#FFFFFF;--border:#E8EAF0;
+    --text:#1A1D23;--text-2:#6B7280;--text-3:#9CA3AF;
+    --radius:14px;--shadow:0 1px 4px rgba(0,0,0,0.07),0 4px 16px rgba(0,0,0,0.05);
+    --input-bg:#F7F8FA;
+  }
+  @media(prefers-color-scheme:dark){
+    :root{
+      --bg:#0F0F11;--card:#1C1C1E;--border:#2C2C2E;
+      --text:#F2F2F7;--text-2:#9CA3AF;--text-3:#6B7280;
+      --red-light:#2C1A1A;--input-bg:#2C2C2E;
+    }
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;min-height:100vh;}
+
+  nav{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;max-width:640px;margin:0 auto;}
+  .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);}
+  .nav-name{font-size:17px;font-weight:700;}
+  .nav-link{font-size:14px;color:var(--red);font-weight:600;text-decoration:none;background:var(--red-light);padding:8px 16px;border-radius:20px;}
+
+  .hero{max-width:640px;margin:0 auto;padding:32px 24px 24px;}
+  .eyebrow{display:inline-flex;align-items:center;gap:6px;background:var(--red-light);color:var(--red);font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.5px;}
+  .hero h1{font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1.2;margin-bottom:10px;}
+  .hero p{font-size:15px;color:var(--text-2);line-height:1.7;}
+
+  .options{max-width:640px;margin:0 auto;padding:0 24px;display:flex;flex-direction:column;gap:12px;}
+  .option-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:20px 22px;text-decoration:none;color:var(--text);display:flex;align-items:center;gap:16px;transition:border-color 0.15s;}
+  .option-card:active{border-color:var(--red);}
+  .option-icon{width:48px;height:48px;border-radius:12px;background:var(--red-light);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+  .option-title{font-size:16px;font-weight:600;margin-bottom:4px;}
+  .option-sub{font-size:13px;color:var(--text-2);line-height:1.5;}
+  .option-arrow{color:var(--text-3);font-size:20px;margin-left:auto;}
+
+  .divider{max-width:640px;margin:28px auto;padding:0 24px;}
+  .divider hr{border:none;border-top:1px solid var(--border);}
+
+  .form-section{max-width:640px;margin:0 auto;padding:0 24px 60px;}
+  .form-title{font-size:20px;font-weight:700;margin-bottom:6px;}
+  .form-sub{font-size:13px;color:var(--text-2);margin-bottom:20px;line-height:1.6;}
+  .form-label{font-size:12px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.6px;display:block;margin-bottom:6px;}
+  .form-input{width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--input-bg);color:var(--text);font-size:15px;font-family:inherit;outline:none;margin-bottom:14px;}
+  .form-input:focus{border-color:var(--red);}
+  .form-input::placeholder{color:var(--text-3);}
+  textarea.form-input{resize:vertical;min-height:120px;}
+  .form-select{width:100%;padding:13px 16px;border-radius:10px;border:1.5px solid var(--border);background:var(--input-bg);color:var(--text);font-size:15px;font-family:inherit;outline:none;margin-bottom:14px;cursor:pointer;}
+  .form-select:focus{border-color:var(--red);}
+  .btn-send{width:100%;padding:15px;border-radius:10px;background:var(--red);color:white;border:none;font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;}
+  .btn-send:active{opacity:0.85;}
+  .privacy{font-size:11.5px;color:var(--text-3);margin-top:10px;line-height:1.6;text-align:center;}
+
+  footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-size:12px;color:var(--text-3);}
+  footer a{color:var(--red);text-decoration:none;}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">
+    <img src="icon.png" style="width:36px;height:36px;border-radius:9px;flex-shrink:0;"/>
+    <span class="nav-name">EarlyTube</span>
+  </a>
+  <a class="nav-link" href="index.html">Open app →</a>
+</nav>
+
+<div class="hero">
+  <div class="eyebrow">✦ Contact & feedback</div>
+  <h1>We'd love to hear from you.</h1>
+  <p>EarlyTube is built by a mom, for parents. Your feedback makes it better for every child. Whether you found a broken video, have a suggestion, or just want to share your story — we're listening.</p>
+</div>
+
+<div class="options">
+  <a class="option-card" href="mailto:earlytubeapp@gmail.com?subject=Broken video report">
+    <div class="option-icon">🔧</div>
+    <div>
+      <div class="option-title">Report a broken video</div>
+      <div class="option-sub">Found a video that isn't working or isn't appropriate? Let us know and we'll fix it.</div>
+    </div>
+    <span class="option-arrow">›</span>
+  </a>
+  <a class="option-card" href="mailto:earlytubeapp@gmail.com?subject=Video suggestion">
+    <div class="option-icon">📹</div>
+    <div>
+      <div class="option-title">Suggest a video</div>
+      <div class="option-sub">Know a great educational YouTube video for a specific age group? Share it with us.</div>
+    </div>
+    <span class="option-arrow">›</span>
+  </a>
+  <a class="option-card" href="mailto:earlytubeapp@gmail.com?subject=Feature idea">
+    <div class="option-icon">💡</div>
+    <div>
+      <div class="option-title">Share a feature idea</div>
+      <div class="option-sub">Have an idea to make EarlyTube better for children on the autism spectrum? We want to hear it.</div>
+    </div>
+    <span class="option-arrow">›</span>
+  </a>
+  <a class="option-card" href="mailto:earlytubeapp@gmail.com?subject=My story">
+    <div class="option-icon">💛</div>
+    <div>
+      <div class="option-title">Share your story</div>
+      <div class="option-sub">Has EarlyTube helped your child? Your story might help another parent find it.</div>
+    </div>
+    <span class="option-arrow">›</span>
+  </a>
+  <a class="option-card" href="https://ko-fi.com/earlytube" target="_blank">
+    <div class="option-icon">🤖</div>
+    <div>
+      <div class="option-title">Support EarlyTube</div>
+      <div class="option-sub">Help keep it free, updated and improving. Any support goes towards the tools that keep this running.</div>
+    </div>
+    <span class="option-arrow">›</span>
+  </a>
+</div>
+
+<div class="divider"><hr/></div>
+
+<div class="form-section">
+  <div class="form-title">Or send us a message</div>
+  <div class="form-sub">Fill in the form below and we'll get back to you at earlytubeapp@gmail.com.</div>
+
+  <label class="form-label">Your name (optional)</label>
+  <input class="form-input" id="f-name" type="text" placeholder="e.g. Sarah"/>
+
+  <label class="form-label">Your email</label>
+  <input class="form-input" id="f-email" type="email" inputmode="email" placeholder="your@email.com"/>
+
+  <label class="form-label">What's this about?</label>
+  <select class="form-select" id="f-type">
+    <option value="Broken video">Broken video</option>
+    <option value="Video suggestion">Video suggestion</option>
+    <option value="Feature idea">Feature idea</option>
+    <option value="My story">My story</option>
+    <option value="General feedback">General feedback</option>
+    <option value="Other">Other</option>
+  </select>
+
+  <label class="form-label">Your message</label>
+  <textarea class="form-input" id="f-message" placeholder="Tell us anything…"></textarea>
+
+  <button class="btn-send" onclick="sendMessage()">Send message →</button>
+  <div class="privacy">Your email will only be used to reply to your message. We will never share it.</div>
+</div>
+
+<footer>
+  <a href="index.html">Open EarlyTube</a> &nbsp;·&nbsp;
+  <a href="about.html">Our story</a> &nbsp;·&nbsp;
+  <a href="mailto:earlytubeapp@gmail.com">earlytubeapp@gmail.com</a>
+</footer>
+
+<script>
+function sendMessage(){
+  var name=document.getElementById('f-name').value.trim();
+  var email=document.getElementById('f-email').value.trim();
+  var type=document.getElementById('f-type').value;
+  var msg=document.getElementById('f-message').value.trim();
+  if(!email){alert('Please enter your email so we can reply.');return;}
+  if(!msg){alert('Please enter a message.');return;}
+  var subject=encodeURIComponent('EarlyTube — '+type+(name?' from '+name:''));
+  var body=encodeURIComponent((name?'From: '+name+'\n':'')+'Email: '+email+'\n\n'+msg);
+  window.location.href='mailto:earlytubeapp@gmail.com?subject='+subject+'&body='+body;
+}
+</script>
+</body>
+</html>
