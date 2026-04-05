@@ -416,15 +416,19 @@ provider.addScope('https://www.googleapis.com/auth/drive.file');
 provider.addScope('https://www.googleapis.com/auth/spreadsheets');
 
 function signIn(){
-  auth.signInWithPopup(provider).then(function(result){
+  auth.signInWithRedirect(provider);
+}
+
+// Handle redirect result on page load
+auth.getRedirectResult().then(function(result){
+  if(result&&result.user&&result.credential){
     var token=result.credential.accessToken;
     localStorage.setItem('et_gtoken',token);
     setupUserProfile(result.user,token);
-  }).catch(function(e){
-    console.error('Sign in error',e);
-    alert('Sign in failed. Please try again.');
-  });
-}
+  }
+}).catch(function(e){
+  console.error('Redirect error',e);
+});
 
 function signOut(){
   auth.signOut().then(function(){
