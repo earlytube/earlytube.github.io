@@ -92,11 +92,14 @@
 .player-top{background:#111;padding:14px 20px;width:100%;}
 .player-instruction{font-size:13px;color:#aaa;margin-bottom:12px;line-height:1.5;}
 .btn-lock{width:100%;padding:14px;border-radius:10px;background:#E53935;border:none;color:white;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
-.player-wrap{position:relative;width:100%;overflow:hidden;background:#000;}
-#yt-iframe{display:block;width:100%;height:calc(56.25vw + 120px);border:none;}
+.player-wrap{position:relative;width:100%;background:#000;}
+#yt-iframe{display:block;width:100%;aspect-ratio:16/9;border:none;}
 .player-overlay{display:none;position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;}
-.controls-hider{position:absolute;bottom:0;left:0;width:100%;height:120px;background:#000;z-index:11;}
-.lock-toast{position:absolute;bottom:130px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:white;font-size:16px;font-weight:700;padding:12px 24px;border-radius:24px;z-index:15;white-space:nowrap;transition:opacity 0.3s;border:1px solid rgba(255,255,255,0.15);}
+.tap-to-play{position:absolute;top:0;left:0;width:100%;height:100%;z-index:20;background:rgba(0,0,0,0.5);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;cursor:pointer;}
+.play-circle{width:76px;height:76px;background:#E53935;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.play-circle svg{width:28px;height:28px;fill:white;margin-left:4px;}
+.tap-to-play p{font-size:15px;color:rgba(255,255,255,0.75);font-weight:500;}
+.lock-toast{position:absolute;top:16px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.85);color:white;font-size:15px;font-weight:700;padding:10px 20px;border-radius:20px;z-index:15;white-space:nowrap;transition:opacity 0.3s;border:1px solid rgba(255,255,255,0.15);}
 .lock-toast.hidden{opacity:0;pointer-events:none;}
 .player-bottom{background:#111;padding:14px 20px;width:100%;display:none;}
 .next-title{font-size:11px;color:#666;text-transform:uppercase;letter-spacing:0.6px;font-weight:600;margin-bottom:10px;}
@@ -225,7 +228,10 @@
   <div class="player-wrap">
     <iframe id="yt-iframe" src="" allow="autoplay; encrypted-media" allowfullscreen="false"></iframe>
     <div class="player-overlay" id="player-overlay" oncontextmenu="return false;"></div>
-    <div class="controls-hider"></div>
+    <div class="tap-to-play" id="tap-to-play" onclick="startVideo()">
+      <div class="play-circle"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>
+      <p>Tap to play</p>
+    </div>
     <div class="lock-toast hidden" id="lock-toast">🔒 Locked</div>
   </div>
   <div class="player-bottom" id="player-bottom">
@@ -426,25 +432,21 @@ function prepareVideo(id){
   pendingId=id;
   document.getElementById('url-error').textContent='';
   document.getElementById('url-input').value='';
-  document.getElementById('yt-iframe').src='https://www.youtube.com/embed/'+id+'?autoplay=0&controls=1&disablekb=0&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1';
+  // Load with controls=0 — no progress bar, fully clean
+  document.getElementById('yt-iframe').src='https://www.youtube.com/embed/'+id+'?autoplay=0&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1';
   document.getElementById('player-overlay').style.display='none';
+  document.getElementById('tap-to-play').style.display='flex';
   document.getElementById('player-top').style.display='block';
   document.getElementById('player-bottom').style.display='none';
   document.getElementById('lock-toast').classList.add('hidden');
-  // Build next videos
-  var age=document.getElementById('age-select').value;
-  var f=allVideos.filter(function(v){return(v.age||'').toLowerCase()===age&&v.id!==id;});
-  if(!f.length)f=(FALLBACK[age]||[]).filter(function(v){return v.id!==id;});
-  var html='';
-  f.slice(0,3).forEach(function(v){
-    html+='<button class="next-video-btn" onclick="prepareVideo(\''+v.id+'\')">'
-      +'<div class="next-play-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>'
-      +'<div><div class="next-video-title">'+escHtml(v.title)+'</div>'
-      +'<div class="next-video-sub">'+escHtml(v.channel||'')+'</div></div>'
-      +'</button>';
-  });
-  document.getElementById('next-videos').innerHTML=html||'<div style="font-size:12px;color:#666;">No more videos in this group.</div>';
+  buildNextVideos(id);
   show('player-screen');
+}
+
+function startVideo(){
+  // User tap satisfies iOS autoplay requirement
+  document.getElementById('yt-iframe').src='https://www.youtube.com/embed/'+pendingId+'?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1';
+  document.getElementById('tap-to-play').style.display='none';
 }
 
 function lockControls(){
@@ -457,11 +459,27 @@ function lockControls(){
   setTimeout(function(){toast.classList.add('hidden');},1500);
 }
 
+function buildNextVideos(currentId){
+  var age=document.getElementById('age-select').value;
+  var f=allVideos.filter(function(v){return(v.age||'').toLowerCase()===age&&v.id!==currentId;});
+  if(!f.length)f=(FALLBACK[age]||[]).filter(function(v){return v.id!==currentId;});
+  var html='';
+  f.slice(0,3).forEach(function(v){
+    html+='<button class="next-video-btn" onclick="prepareVideo(\''+v.id+'\')">'
+      +'<div class="next-play-icon"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>'
+      +'<div><div class="next-video-title">'+escHtml(v.title)+'</div>'
+      +'<div class="next-video-sub">'+escHtml(v.channel||'')+'</div></div>'
+      +'</button>';
+  });
+  document.getElementById('next-videos').innerHTML=html||'<div style="font-size:12px;color:#666;">No more videos in this group.</div>';
+}
+
 function closeVideo(){
   document.getElementById('yt-iframe').src='';
   document.getElementById('player-overlay').style.display='none';
   document.getElementById('player-top').style.display='block';
   document.getElementById('player-bottom').style.display='none';
+  document.getElementById('tap-to-play').style.display='none';
   show('home');
 }
 
