@@ -91,8 +91,7 @@
 .step{display:flex;align-items:center;gap:10px;font-size:13px;color:#aaa;}
 .step-num{width:22px;height:22px;border-radius:50%;background:#333;color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .step-num.done{background:#22C55E;}
-.btn-lock-top{width:100%;padding:14px;border-radius:10px;background:var(–red);border:none;color:white;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
-.btn-lock-top:active{opacity:0.85;}
+.btn-lock-top{width:100%;padding:14px;border-radius:10px;background:#E53935!important;border:none;color:white!important;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;}
 .player-wrap{position:relative;width:100%;overflow:hidden;background:#000;}
 #yt-iframe{display:block;width:100%;height:calc(56.25vw + 120px);border:none;}
 .player-overlay{display:none;position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;}
@@ -215,10 +214,7 @@
 
 <div id="player-screen" class="screen">
   <div class="player-top" id="player-top">
-    <div class="player-steps">
-      <div class="step"><div class="step-num" id="step1num">1</div><span>Tap play on the video below</span></div>
-      <div class="step"><div class="step-num" id="step2num">2</div><span>Tap Lock — controls disappear for your child</span></div>
-    </div>
+    <div style="font-size:13px;color:#aaa;margin-bottom:12px;">Tap play on the video below, then tap Lock — controls disappear for your child.</div>
     <button class="btn-lock-top" id="btn-lock-top" onclick="lockControls()">🔒 Lock the controls</button>
   </div>
   <div class="player-wrap">
