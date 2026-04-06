@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
-<!-- v1.7 -->
+<!-- v1.8 -->
 <title>EarlyTube</title>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -104,7 +104,6 @@
   .sheet-link{font-size:11px;color:var(--text-3);text-decoration:none;display:block;margin-top:10px;}
   .info-card{background:var(--red-light);border:1px solid #FFCDD2;border-radius:var(--radius);padding:16px 18px;width:calc(100% - 48px);max-width:560px;margin:0 24px 16px;}
   .info-card p{font-size:13px;color:#B71C1C;line-height:1.65;}
-  .info-card strong{font-weight:600;}
   #player-screen{background:#000;width:100%;}
   .player-top{background:#111;padding:14px 20px;width:100%;}
   .player-instruction{font-size:13px;color:#aaa;margin-bottom:12px;line-height:1.5;}
@@ -206,8 +205,6 @@
     </button>
   </div>
 
-  <!-- MY VIDEOS — shown when logged in, has videos -->
-
   <div class="card" id="personal-card" style="display:none;">
     <div class="section-header">
       <div class="section-left">
@@ -220,8 +217,6 @@
     <a class="sheet-link" id="sheet-link" href="#" target="_blank">📊 Manage in Google Sheets →</a>
   </div>
 
-  <!-- NO VIDEOS YET — shown when logged in, no videos -->
-
   <div class="card" id="no-videos-card" style="display:none;">
     <div class="section-header">
       <div class="section-title">My videos</div>
@@ -230,8 +225,6 @@
     <div class="empty-state">No videos yet — tap + Add to build your list.</div>
     <a class="sheet-link" id="sheet-link-2" href="#" target="_blank">📊 Manage in Google Sheets →</a>
   </div>
-
-  <!-- PASTE LINK — hidden when user has 1+ videos -->
 
   <div class="card" id="paste-card">
     <div class="input-label">Paste a YouTube link</div>
@@ -242,8 +235,6 @@
     </div>
     <div class="error-msg" id="url-error"></div>
   </div>
-
-  <!-- SUGGESTED VIDEOS — hidden when user has 1+ videos -->
 
   <div class="card" id="suggested-card">
     <div class="section-header">
@@ -387,23 +378,24 @@ var provider=new firebase.auth.GoogleAuthProvider();
 provider.addScope('https://www.googleapis.com/auth/drive.file');
 provider.addScope('https://www.googleapis.com/auth/spreadsheets');
 
+// ── Sign in: popup for all browsers (works on desktop + iOS Safari) ──
 function signIn(){
-auth.signInWithPopup(provider).then(function(result){
-if(result&&result.credential){
-var token=result.credential.accessToken;
-localStorage.setItem(‘et_gtoken’,token);
-currentUser=result.user;
-updateAuthUI(result.user);
-setupUserProfile(result.user,token);
-}
-}).catch(function(e){
-console.error(‘Sign in error’,e);
-if(e.code===‘auth/popup-blocked’){
-alert(‘Pop-up was blocked by your browser. Please allow pop-ups for this site and try again.’);
-} else if(e.code!==‘auth/cancelled-popup-request’&&e.code!==‘auth/popup-closed-by-user’){
-alert(‘Sign in failed. Please try again.’);
-}
-});
+  auth.signInWithPopup(provider).then(function(result){
+    if(result&&result.credential){
+      var token=result.credential.accessToken;
+      localStorage.setItem('et_gtoken',token);
+      currentUser=result.user;
+      updateAuthUI(result.user);
+      setupUserProfile(result.user,token);
+    }
+  }).catch(function(e){
+    console.error('Sign in error',e);
+    if(e.code==='auth/popup-blocked'){
+      alert('Pop-up was blocked. Please allow pop-ups for this site and try again.');
+    } else if(e.code!=='auth/cancelled-popup-request'&&e.code!=='auth/popup-closed-by-user'){
+      alert('Sign in failed. Please try again.');
+    }
+  });
 }
 
 function signOut(){
@@ -432,11 +424,20 @@ function updateAuthUI(user){
   }
 }
 
+// ── Auth state: getRedirectResult handles iOS Safari's popup→redirect fallback ──
 auth.onAuthStateChanged(function(user){
   if(user){
     currentUser=user;
     updateAuthUI(user);
-    loadUserProfile(user);
+    auth.getRedirectResult().then(function(result){
+      if(result&&result.credential&&result.credential.accessToken){
+        var token=result.credential.accessToken;
+        localStorage.setItem('et_gtoken',token);
+        setupUserProfile(user,token);
+      } else {
+        loadUserProfile(user);
+      }
+    }).catch(function(){loadUserProfile(user);});
   } else {
     updateAuthUI(null);
   }
@@ -464,13 +465,11 @@ function loadUserProfile(user){
 function setupUserProfile(user,token){
   db.collection('users').doc(user.uid).get().then(function(doc){
     if(doc.exists&&doc.data().sheetId){
-      // Verify sheet exists
       fetch('https://sheets.googleapis.com/v4/spreadsheets/'+doc.data().sheetId+'/values/Videos!A1',{
         headers:{'Authorization':'Bearer '+token}
       }).then(function(r){return r.json();})
       .then(function(data){
         if(data.error){
-          console.log('Sheet invalid, recreating...');
           db.collection('users').doc(user.uid).update({
             sheetId:firebase.firestore.FieldValue.delete(),
             sheetUrl:firebase.firestore.FieldValue.delete()
@@ -557,28 +556,18 @@ function loadPersonalVideos(sheetId,token){
     headers:{'Authorization':'Bearer '+token}
   }).then(function(r){return r.json();})
   .then(function(data){
-    if(data.error){
-      showNoVideosState(userSheetUrl);
-      return;
-    }
+    if(data.error){showNoVideosState(userSheetUrl);return;}
     var rows=data.values||[];
-    // Collect valid video rows only
     var videoRows=[];
     for(var i=1;i<rows.length;i++){
       if(rows[i]&&rows[i][2]&&rows[i][2].trim())videoRows.push(rows[i]);
     }
-    if(videoRows.length===0){
-      showNoVideosState(userSheetUrl);
-      return;
-    }
-    // Has videos — hide paste and suggested
+    if(videoRows.length===0){showNoVideosState(userSheetUrl);return;}
     document.getElementById('no-videos-card').style.display='none';
     document.getElementById('suggested-card').style.display='none';
     document.getElementById('paste-card').style.display='none';
     document.getElementById('personal-card').style.display='block';
     document.getElementById('sheet-link').href=userSheetUrl||'#';
-
-    // Build categories
     personalVideosData={};
     videoRows.forEach(function(row){
       var title=row[0]||'';
@@ -587,8 +576,6 @@ function loadPersonalVideos(sheetId,token){
       if(!personalVideosData[cat])personalVideosData[cat]=[];
       personalVideosData[cat].push({title:title,id:id});
     });
-
-    // Populate dropdown
     var cats=Object.keys(personalVideosData);
     var sel=document.getElementById('category-select');
     var prev=sel.value;
@@ -599,7 +586,6 @@ function loadPersonalVideos(sheetId,token){
       opt.textContent=cat+' ('+personalVideosData[cat].length+')';
       sel.appendChild(opt);
     });
-    // Keep previously selected category if it still exists
     if(prev&&personalVideosData[prev])sel.value=prev;
     renderPersonalCategory();
   }).catch(function(e){
@@ -654,7 +640,6 @@ function savePersonalVideo(){
   });
 }
 
-// Curated videos
 var CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vSMkmJi2zz99BE6d7STDfVXiBgd1eyfZSdIx4TUsst05Xm4m7G6tz9zGTJXmoVku1DQpmC52vWpOlhI/pub?output=csv';
 var CONTACT_EMAIL='earlytubeapp@gmail.com';
 var FALLBACK={
