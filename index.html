@@ -505,29 +505,50 @@ function loadUserProfile(user){
 function setupUserProfile(user,token){
   db.collection('users').doc(user.uid).get().then(function(doc){
     if(doc.exists&&doc.data().sheetId){
-      userSheetUrl=doc.data().sheetUrl;
-      document.getElementById('sheet-link').href=userSheetUrl||'#';
-      document.getElementById('personal-card').style.display='block';
-      loadPersonalVideos(doc.data().sheetId);
-      return;
+      // Verify sheet still exists before trusting Firestore
+      fetch('https://sheets.googleapis.com/v4/spreadsheets/'+doc.data().sheetId,{
+        headers:{'Authorization':'Bearer '+token}
+      }).then(function(r){
+        if(r.status===404||r.status===403){
+          // Sheet gone — clear and recreate
+          console.log('Stored sheet gone — recreating');
+          db.collection('users').doc(user.uid).update({sheetId:null,sheetUrl:null}).then(function(){
+            createAndSaveSheet(user,token);
+          });
+        } else {
+          // Sheet exists — load it
+          userSheetUrl=doc.data().sheetUrl;
+          document.getElementById('sheet-link').href=userSheetUrl||'#';
+          document.getElementById('personal-card').style.display='block';
+          loadPersonalVideos(doc.data().sheetId);
+        }
+      }).catch(function(){
+        loadPersonalVideos(doc.data().sheetId);
+      });
+    } else {
+      createAndSaveSheet(user,token);
     }
-    // Create a fresh folder and sheet — always new
-    createFreshSetup(token,user).then(function(sheetData){
-      var sheetUrl='https://docs.google.com/spreadsheets/d/'+sheetData.id+'/edit';
-      userSheetUrl=sheetUrl;
-      db.collection('users').doc(user.uid).set({
-        name:user.displayName,email:user.email,
-        sheetId:sheetData.id,sheetUrl:sheetUrl,
-        createdAt:firebase.firestore.FieldValue.serverTimestamp()
-      },{merge:true});
-      document.getElementById('sheet-link').href=sheetUrl;
-      document.getElementById('personal-card').style.display='block';
-      document.getElementById('personal-video-list').innerHTML='<div class="empty-state">No videos yet. Tap + Add video to get started.</div>';
-    }).catch(function(e){
-      console.error('Setup error',e);
-      document.getElementById('personal-card').style.display='block';
-      document.getElementById('personal-video-list').innerHTML='<div class="empty-state">Tap + Add video to get started.</div>';
-    });
+  });
+}
+
+function createAndSaveSheet(user,token){
+  createFreshSetup(token,user).then(function(sheetData){
+    var sheetUrl='https://docs.google.com/spreadsheets/d/'+sheetData.id+'/edit';
+    userSheetUrl=sheetUrl;
+    db.collection('users').doc(user.uid).set({
+      name:user.displayName,email:user.email,
+      sheetId:sheetData.id,sheetUrl:sheetUrl,
+      createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    },{merge:true});
+    document.getElementById('sheet-link').href=sheetUrl;
+    document.getElementById('personal-card').style.display='block';
+    document.getElementById('personal-video-list').innerHTML='<div class="empty-state">No videos yet. Tap + Add to get started.</div>';
+    document.getElementById('suggested-card').style.display='block';
+    document.getElementById('paste-card').style.display='block';
+  }).catch(function(e){
+    console.error('Setup error',e);
+    document.getElementById('personal-card').style.display='block';
+    document.getElementById('personal-video-list').innerHTML='<div class="empty-state">Tap + Add to get started.</div>';
   });
 }
 
