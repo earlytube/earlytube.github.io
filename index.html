@@ -236,22 +236,25 @@
     </button>
   </div>
 
-  <!-- PERSONAL VIDEOS — replaces suggested when logged in -->
+  <!-- PERSONAL VIDEOS — replaces suggested when logged in with videos -->
 
   <div class="personal-card" id="personal-card" style="display:none;">
-    <div class="personal-header">
-      <div class="personal-title">My videos</div>
-      <button class="btn-add-video" onclick="showAddVideoModal()">+ Add video</button>
+    <div class="section-header">
+      <div class="section-left">
+        <div class="section-title">My videos</div>
+        <button class="btn-add-video" onclick="showAddVideoModal()">+ Add</button>
+      </div>
+      <select class="age-select" id="category-select" onchange="renderPersonalCategory()"></select>
     </div>
-    <div id="personal-video-list">
+    <div class="video-list" id="personal-video-list">
       <div class="loading-state">Loading your videos…</div>
     </div>
     <a class="sheet-link" id="sheet-link" href="#" target="_blank">📊 Manage in Google Sheets →</a>
   </div>
 
-  <!-- PASTE LINK -->
+  <!-- PASTE LINK — hidden when user has personal videos -->
 
-  <div class="card">
+  <div class="card" id="paste-card">
     <div class="input-label">Paste a YouTube link</div>
     <div class="input-desc">Find a video on YouTube, copy the link and paste it here. Your child watches it without any controls — no rewind, no skip, no loop.</div>
     <div class="input-wrap">
@@ -261,7 +264,7 @@
     <div class="error-msg" id="url-error"></div>
   </div>
 
-  <!-- SUGGESTED VIDEOS — hidden when logged in -->
+  <!-- SUGGESTED VIDEOS — hidden when user has personal videos -->
 
   <div class="card" id="suggested-card">
     <div class="section-header">
@@ -457,6 +460,7 @@ function updateAuthUI(user){
     document.getElementById('auth-signed-in').style.display='none';
     document.getElementById('personal-card').style.display='none';
     document.getElementById('suggested-card').style.display='block';
+    document.getElementById('paste-card').style.display='block';
   }
 }
 
@@ -507,9 +511,8 @@ function setupUserProfile(user,token){
       loadPersonalVideos(doc.data().sheetId);
       return;
     }
-    createDriveFolder(token).then(function(folderId){
-      return createSheet(token,folderId,user.displayName||'My');
-    }).then(function(sheetData){
+    // Create a fresh folder and sheet — always new
+    createFreshSetup(token,user).then(function(sheetData){
       var sheetUrl='https://docs.google.com/spreadsheets/d/'+sheetData.id+'/edit';
       userSheetUrl=sheetUrl;
       db.collection('users').doc(user.uid).set({
@@ -528,33 +531,46 @@ function setupUserProfile(user,token){
   });
 }
 
-function createDriveFolder(token){
-  return fetch('https://www.googleapis.com/drive/v3/files',{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({name:'EarlyTube',mimeType:'application/vnd.google-apps.folder'})
-  }).then(function(r){return r.json();}).then(function(d){return d.id;});
-}
-
-function createSheet(token,folderId,name){
-  return fetch('https://sheets.googleapis.com/v4/spreadsheets',{
-    method:'POST',
-    headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-    body:JSON.stringify({
-      properties:{title:'EarlyTube — '+name},
-      sheets:[{properties:{title:'Videos'},data:[{rowData:[{values:[
-        {userEnteredValue:{stringValue:'title'}},
-        {userEnteredValue:{stringValue:'channel'}},
-        {userEnteredValue:{stringValue:'id'}},
-        {userEnteredValue:{stringValue:'category'}},
-        {userEnteredValue:{stringValue:'age'}},
-        {userEnteredValue:{stringValue:'notes'}}
-      ]}]}]}]
-    })
-  }).then(function(r){return r.json();}).then(function(d){
-    return fetch('https://www.googleapis.com/drive/v3/files/'+d.spreadsheetId+'?addParents='+folderId+'&removeParents=root',{
-      method:'PATCH',headers:{'Authorization':'Bearer '+token}
-    }).then(function(){return{id:d.spreadsheetId};});
+function createFreshSetup(token,user){
+  var name=user.displayName||'My';
+  // Check if EarlyTube folder already exists
+  return fetch('https://www.googleapis.com/drive/v3/files?q=name%3D%27EarlyTube%27+and+mimeType%3D%27application%2Fvnd.google-apps.folder%27+and+trashed%3Dfalse',{
+    headers:{'Authorization':'Bearer '+token}
+  }).then(function(r){return r.json();})
+  .then(function(data){
+    if(data.files&&data.files.length>0){
+      // Folder exists — reuse it
+      return data.files[0].id;
+    }
+    // No folder — create a new one
+    return fetch('https://www.googleapis.com/drive/v3/files',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({name:'EarlyTube',mimeType:'application/vnd.google-apps.folder'})
+    }).then(function(r){return r.json();}).then(function(f){return f.id;});
+  })
+  .then(function(folderId){
+    // Always create a fresh sheet inside the folder
+    return fetch('https://sheets.googleapis.com/v4/spreadsheets',{
+      method:'POST',
+      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        properties:{title:'EarlyTube — '+name},
+        sheets:[{properties:{title:'Videos'},data:[{rowData:[{values:[
+          {userEnteredValue:{stringValue:'title'}},
+          {userEnteredValue:{stringValue:'channel'}},
+          {userEnteredValue:{stringValue:'id'}},
+          {userEnteredValue:{stringValue:'category'}},
+          {userEnteredValue:{stringValue:'age'}},
+          {userEnteredValue:{stringValue:'notes'}}
+        ]}]}]}]
+      })
+    }).then(function(r){return r.json();})
+    .then(function(sheet){
+      return fetch('https://www.googleapis.com/drive/v3/files/'+sheet.spreadsheetId+'?addParents='+folderId+'&removeParents=root',{
+        method:'PATCH',headers:{'Authorization':'Bearer '+token}
+      }).then(function(){return{id:sheet.spreadsheetId};});
+    });
   });
 }
 
