@@ -2,7 +2,7 @@
 “name”: “EarlyTube”,
 “short_name”: “EarlyTube”,
 “description”: “YouTube for young children — no rewind, no skip, no controls.”,
-“start_url”: “/”,
+“start_url”: “/index.html”,
 “scope”: “/”,
 “display”: “standalone”,
 “orientation”: “portrait”,
@@ -12,12 +12,14 @@
 {
 “src”: “icon.png”,
 “sizes”: “192x192”,
-“type”: “image/png”
+“type”: “image/png”,
+“purpose”: “any”
 },
 {
 “src”: “icon.png”,
 “sizes”: “512x512”,
-“type”: “image/png”
+“type”: “image/png”,
+“purpose”: “any maskable”
 }
 ]
 }
