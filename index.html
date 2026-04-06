@@ -388,23 +388,22 @@ provider.addScope('https://www.googleapis.com/auth/drive.file');
 provider.addScope('https://www.googleapis.com/auth/spreadsheets');
 
 function signIn(){
-  var isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  if(isSafari){
-    auth.signInWithRedirect(provider);
-  } else {
-    auth.signInWithPopup(provider).then(function(result){
-      if(result&&result.credential){
-        var token=result.credential.accessToken;
-        localStorage.setItem('et_gtoken',token);
-        currentUser=result.user;
-        updateAuthUI(result.user);
-        setupUserProfile(result.user,token);
-      }
-    }).catch(function(e){
-      console.error('Popup error',e);
-      auth.signInWithRedirect(provider);
-    });
-  }
+auth.signInWithPopup(provider).then(function(result){
+if(result&&result.credential){
+var token=result.credential.accessToken;
+localStorage.setItem(‘et_gtoken’,token);
+currentUser=result.user;
+updateAuthUI(result.user);
+setupUserProfile(result.user,token);
+}
+}).catch(function(e){
+console.error(‘Sign in error’,e);
+if(e.code===‘auth/popup-blocked’){
+alert(‘Pop-up was blocked by your browser. Please allow pop-ups for this site and try again.’);
+} else if(e.code!==‘auth/cancelled-popup-request’&&e.code!==‘auth/popup-closed-by-user’){
+alert(‘Sign in failed. Please try again.’);
+}
+});
 }
 
 function signOut(){
