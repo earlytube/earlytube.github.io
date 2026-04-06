@@ -236,14 +236,14 @@
     </button>
   </div>
 
-  <!-- PERSONAL VIDEOS -->
+  <!-- PERSONAL VIDEOS — replaces suggested when logged in -->
 
   <div class="personal-card" id="personal-card" style="display:none;">
     <div class="personal-header">
       <div class="personal-title">My videos</div>
       <button class="btn-add-video" onclick="showAddVideoModal()">+ Add video</button>
     </div>
-    <div class="video-list" id="personal-video-list">
+    <div id="personal-video-list">
       <div class="loading-state">Loading your videos…</div>
     </div>
     <a class="sheet-link" id="sheet-link" href="#" target="_blank">📊 Manage in Google Sheets →</a>
@@ -261,9 +261,9 @@
     <div class="error-msg" id="url-error"></div>
   </div>
 
-  <!-- SUGGESTED VIDEOS -->
+  <!-- SUGGESTED VIDEOS — hidden when logged in -->
 
-  <div class="card">
+  <div class="card" id="suggested-card">
     <div class="section-header">
       <div class="section-left">
         <div class="section-title">Suggested videos</div>
@@ -456,6 +456,7 @@ function updateAuthUI(user){
     document.getElementById('auth-signed-out').style.display='flex';
     document.getElementById('auth-signed-in').style.display='none';
     document.getElementById('personal-card').style.display='none';
+    document.getElementById('suggested-card').style.display='block';
   }
 }
 
@@ -571,24 +572,38 @@ function loadPersonalVideos(sheetId){
     var rows=data.values||[];
     if(rows.length<=1){
       document.getElementById('personal-video-list').innerHTML='<div class="empty-state">No videos yet. Tap + Add video to get started.</div>';
+      document.getElementById('suggested-card').style.display='block';
       return;
     }
-    var html='';
+    // Hide suggested videos — user has their own
+    document.getElementById('suggested-card').style.display='none';
+    // Group by category
+    var categories={};
     for(var i=1;i<rows.length;i++){
       var row=rows[i];
       var title=row[0]||'';
       var id=row[2]||'';
-      var category=row[3]||'';
+      var cat=row[3]||'My Videos';
       if(!id)continue;
-      html+='<div class="video-item">'
-        +'<div class="video-thumb" onclick="prepareVideo(\''+escAttr(id)+'\')">'
-        +'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>'
-        +'<div class="video-info" onclick="prepareVideo(\''+escAttr(id)+'\')">'
-        +'<div class="video-title">'+escHtml(title)+'</div>'
-        +'<div class="video-sub">'+escHtml(category)+'</div>'
-        +'</div></div>';
+      if(!categories[cat])categories[cat]=[];
+      categories[cat].push({title:title,id:id});
     }
-    document.getElementById('personal-video-list').innerHTML=html||'<div class="empty-state">No videos yet.</div>';
+    var html='';
+    Object.keys(categories).forEach(function(cat){
+      html+='<div style="margin-bottom:16px;">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.6px;margin-bottom:8px;">'+escHtml(cat)+'</div>'
+        +'<div style="display:flex;flex-direction:column;gap:8px;">';
+      categories[cat].forEach(function(v){
+        html+='<div class="video-item">'
+          +'<div class="video-thumb" onclick="prepareVideo(\''+escAttr(v.id)+'\')">'
+          +'<svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div>'
+          +'<div class="video-info" onclick="prepareVideo(\''+escAttr(v.id)+'\')">'
+          +'<div class="video-title">'+escHtml(v.title)+'</div>'
+          +'</div></div>';
+      });
+      html+='</div></div>';
+    });
+    document.getElementById('personal-video-list').innerHTML=html;
   }).catch(function(e){
     console.error('Sheet load error',e);
     document.getElementById('personal-video-list').innerHTML='<div class="empty-state">Tap + Add video to get started.</div>';
@@ -710,7 +725,12 @@ function submitReport(){
 
 function show(id){document.querySelectorAll('.screen').forEach(function(s){s.style.display='none';});document.getElementById(id).style.display='flex';}
 function extractId(url){
-  var p=[/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,/^([a-zA-Z0-9_-]{11})$/];
+  // Handle youtu.be share links with ?si= parameter
+  url=url.split('?si=')[0].split('&si=')[0];
+  var p=[
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/,
+    /^([a-zA-Z0-9_-]{11})$/
+  ];
   for(var i=0;i<p.length;i++){var m=url.match(p[i]);if(m)return m[1];}
   return null;
 }
