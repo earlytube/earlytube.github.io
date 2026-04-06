@@ -450,9 +450,7 @@ function signOut(){
     currentUser=null;
     userSheetUrl=null;
     localStorage.removeItem('et_gtoken');
-    document.getElementById('auth-signed-in').style.display='none';
-    document.getElementById('auth-signed-out').style.display='flex';
-    document.getElementById('personal-card').style.display='none';
+    updateAuthUI(null);
   });
 }
 
