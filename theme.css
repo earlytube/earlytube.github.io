@@ -30,27 +30,21 @@ Edit this file to change the look of the entire app.
 
 /* Border radius */
 –radius: 14px;
-}
 
-/* ── Info / warning box ── */
-:root {
+/* Info / warning box */
 –info-bg:      #FDF4ED;
 –info-border:  #E8D5C4;
 –info-text:    #5C3A1E;
-}
 
-/* ── Video cards ── */
-:root {
+/* Video cards */
 –video-card-bg:     #FFFEF5;
 –video-card-border: #E2E8F0;
 –video-card-radius: 20px;
-}
 
-/* ── Player screen (dark area behind the video) ── */
-:root {
-–player-bg:        #1A1008;
-–player-btn-bg:    #2A1A0A;
-–player-btn-border:#3A2A1A;
+/* Player screen */
+–player-bg:         #1A1008;
+–player-btn-bg:     #2A1A0A;
+–player-btn-border: #3A2A1A;
 }
 
 /* ── Dark mode overrides ── */
@@ -61,26 +55,26 @@ Edit this file to change the look of the entire app.
 –red-light:  #2D1B0E;
 
 ```
---bg:         #0F0F11;
---card:       #1C1C1E;
---border:     #2C2C2E;
+-bg:         #0F0F11;
+-card:       #1C1C1E;
+-border:     #2C2C2E;
 
---text:       #F2F2F7;
---text-2:     #9CA3AF;
---text-3:     #6B7280;
+-text:       #F2F2F7;
+-text-2:     #9CA3AF;
+-text-3:     #6B7280;
 
---shadow:     0 1px 4px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
+-shadow:     0 1px 4px rgba(0,0,0,0.3), 0 4px 16px rgba(0,0,0,0.2);
 
---badge-bg:   #1C1C1E;
---video-bg:   #2C2C2E;
---input-bg:   #2C2C2E;
+-badge-bg:   #1C1C1E;
+-video-bg:   #2C2C2E;
+-input-bg:   #2C2C2E;
 
---info-bg:      #2C1A0E;
---info-border:  #5C2E10;
---info-text:    #FDBA74;
+-info-bg:      #2C1A0E;
+-info-border:  #5C2E10;
+-info-text:    #FDBA74;
 
---video-card-bg:     #2C2C2E;
---video-card-border: #3C3C3E;
+-video-card-bg:     #2C2C2E;
+-video-card-border: #3C3C3E;
 ```
 
 }
