@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
-<!-- v2.1 -->
+<!-- v2.2 -->
 <title>EarlyTube</title>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -157,6 +157,7 @@
   .privacy-note{font-size:11.5px;color:var(--text-3);margin-bottom:18px;line-height:1.5;}
   .modal-btns{display:flex;gap:10px;}
   .btn-submit{flex:1;padding:14px;border-radius:10px;background:#E53935;color:white;border:none;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;}
+  .btn-submit:disabled{opacity:0.6;cursor:not-allowed;}
   .btn-cancel{padding:14px 20px;border-radius:10px;background:var(--video-bg);color:var(--text-2);border:1px solid var(--border);font-size:15px;font-family:inherit;cursor:pointer;}
   #settings-screen{background:var(--bg);}
   .settings-header{width:100%;max-width:560px;padding:52px 24px 20px;}
@@ -330,19 +331,19 @@
   <button class="pin-forgot" onclick="forgotPin()">Forgot PIN?</button>
 </div>
 
+<!-- ADD VIDEO MODAL: no title field — fetched automatically from YouTube -->
+
 <div id="add-video-modal" class="modal-overlay">
   <div class="modal-box">
     <div class="modal-title">Add a video</div>
-    <div class="modal-sub">Paste a YouTube link and give it a name.</div>
+    <div class="modal-sub">Paste a YouTube link — we'll fetch the title automatically.</div>
     <label class="modal-label">YouTube link</label>
     <input class="modal-input" id="add-url" type="url" inputmode="url" placeholder="youtube.com/watch?v=..."/>
-    <label class="modal-label">Video title</label>
-    <input class="modal-input" id="add-title" type="text" placeholder="e.g. Baby Shark"/>
     <label class="modal-label">Category (optional)</label>
     <input class="modal-input" id="add-category" type="text" placeholder="e.g. Animals, Science, Bedtime"/>
     <div class="modal-btns">
       <button class="btn-cancel" onclick="closeAddVideoModal()">Cancel</button>
-      <button class="btn-submit" onclick="savePersonalVideo()">Save video</button>
+      <button class="btn-submit" id="add-video-submit" onclick="savePersonalVideo()">Save video</button>
     </div>
   </div>
 </div>
@@ -467,7 +468,6 @@ function loadUserProfile(user){
   db.collection('users').doc(user.uid).get().then(function(doc){
     if(doc.exists){
       var data=doc.data();
-      // Load saved PIN from Firestore
       if(data.pin){
         parentPin=data.pin;
         localStorage.setItem('et_pin',data.pin);
@@ -577,6 +577,8 @@ function createFreshSetup(token,user){
   });
 }
 
+// ── LOAD PERSONAL VIDEOS ─────────────────────────────────────────────────────
+// Fix: run extractId() on column C so full YouTube URLs work, not just bare IDs
 function loadPersonalVideos(sheetId,token){
   if(!token)token=localStorage.getItem('et_gtoken');
   if(!token||!sheetId)return;
@@ -599,8 +601,10 @@ function loadPersonalVideos(sheetId,token){
     personalVideosData={};
     videoRows.forEach(function(row){
       var title=row[0]||'';
-      var id=row[2].trim();
+      // Accept full YouTube URLs or bare IDs in column C
+      var id=extractId(row[2].trim())||row[2].trim();
       var cat=row[3]||'My Videos';
+      if(!id)return;
       if(!personalVideosData[cat])personalVideosData[cat]=[];
       personalVideosData[cat].push({title:title,id:id});
     });
@@ -641,30 +645,57 @@ function showAddVideoModal(){document.getElementById('add-video-modal').style.di
 function closeAddVideoModal(){
   document.getElementById('add-video-modal').style.display='none';
   document.getElementById('add-url').value='';
-  document.getElementById('add-title').value='';
   document.getElementById('add-category').value='';
+  var btn=document.getElementById('add-video-submit');
+  btn.textContent='Save video';btn.disabled=false;
 }
 
+// ── SAVE PERSONAL VIDEO ───────────────────────────────────────────────────────
+// Fix: no title input — fetched automatically via YouTube oEmbed (no API key needed)
 function savePersonalVideo(){
   var url=document.getElementById('add-url').value.trim();
-  var title=document.getElementById('add-title').value.trim();
-  var category=document.getElementById('add-category').value.trim();
+  var category=document.getElementById('add-category').value.trim()||'My Videos';
   var id=extractId(url);
   if(!id){alert('Please paste a valid YouTube link.');return;}
-  if(!title){alert('Please enter a video title.');return;}
   var token=localStorage.getItem('et_gtoken');
   if(!token||!currentUser){alert('Please sign in again.');return;}
-  db.collection('users').doc(currentUser.uid).get().then(function(doc){
-    if(!doc.exists||!doc.data().sheetId){alert('Sheet not found. Please sign out and sign in again.');return;}
+  var btn=document.getElementById('add-video-submit');
+  btn.textContent='Fetching title…';btn.disabled=true;
+  fetch('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+id+'&format=json')
+    .then(function(r){
+      if(!r.ok)throw new Error('oEmbed failed');
+      return r.json();
+    })
+    .then(function(data){
+      return writeVideoToSheet(id, data.title||'Untitled', category, token);
+    })
+    .catch(function(){
+      // oEmbed failed (private/deleted video) — save with bare ID as fallback title
+      return writeVideoToSheet(id, 'Video '+id, category, token);
+    });
+}
+
+function writeVideoToSheet(id, title, category, token){
+  return db.collection('users').doc(currentUser.uid).get().then(function(doc){
+    if(!doc.exists||!doc.data().sheetId){
+      alert('Sheet not found. Please sign out and sign in again.');
+      closeAddVideoModal();
+      return;
+    }
     var sheetId=doc.data().sheetId;
-    fetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/Videos!A:F:append?valueInputOption=RAW',{
+    return fetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/Videos!A:F:append?valueInputOption=RAW',{
       method:'POST',
       headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-      body:JSON.stringify({values:[[title,'',id,category||'My Videos','','']]})
+      body:JSON.stringify({values:[[title,'',id,category,'','']]})
     }).then(function(){
       closeAddVideoModal();
       loadPersonalVideos(sheetId,token);
-    }).catch(function(e){console.error(e);alert('Failed to save. Please try again.');});
+    }).catch(function(e){
+      console.error(e);
+      alert('Failed to save. Please try again.');
+      var btn=document.getElementById('add-video-submit');
+      btn.textContent='Save video';btn.disabled=false;
+    });
   });
 }
 
