@@ -7,7 +7,7 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
 <meta http-equiv="Pragma" content="no-cache"/>
 <meta http-equiv="Expires" content="0"/>
-<!-- v1.8 -->
+<!-- v2.0 -->
 <title>EarlyTube</title>
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
@@ -17,7 +17,7 @@
 <link rel="icon" type="image/png" href="icon.png"/>
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#E53935"/>
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2DFE2R37G1"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-2DFE2R37G1"></script>
 <script>
   window.dataLayer=window.dataLayer||[];
   function gtag(){dataLayer.push(arguments);}
@@ -106,6 +106,9 @@
   .sheet-link{font-size:11px;color:var(--text-3);text-decoration:none;display:block;margin-top:10px;}
   .info-card{background:var(--red-light);border:1px solid #FFCDD2;border-radius:var(--radius);padding:16px 18px;width:calc(100% - 48px);max-width:560px;margin:0 24px 16px;}
   .info-card p{font-size:13px;color:#B71C1C;line-height:1.65;}
+  .kofi-bar{width:calc(100% - 48px);max-width:560px;margin:0 24px 24px;text-align:center;}
+  .kofi-bar a{font-size:12px;color:var(--text-3);text-decoration:none;}
+  .kofi-bar a:hover{color:var(--red);}
   #player-screen{background:#000;width:100%;}
   .player-top{background:#111;padding:14px 20px;width:100%;}
   .player-instruction{font-size:13px;color:#aaa;margin-bottom:12px;line-height:1.5;}
@@ -261,6 +264,16 @@
   <div class="info-card">
     <p><strong>For parents:</strong> Select your child's age above to see suitable videos. Videos play with no controls visible — your child cannot rewind, skip, or scrub. Closing always requires the parent PIN. <strong>Default PIN is 1234.</strong> Long press logo to open Settings and change PIN.</p>
   </div>
+
+  <div class="kofi-bar">
+    <a href="https://ko-fi.com/earlytube" target="_blank">💛 If this helped your child, support EarlyTube on Ko-fi</a>
+  </div>
+
+  <div style="width:100%;max-width:560px;padding:0 24px 32px;text-align:center;font-size:11px;color:var(--text-3);">
+    <a href="about.html" target="_blank" style="color:var(--text-3);text-decoration:none;">Our story</a> &nbsp;·&nbsp;
+    <a href="contact.html" target="_blank" style="color:var(--text-3);text-decoration:none;">Contact</a> &nbsp;·&nbsp;
+    <a href="privacy.html" target="_blank" style="color:var(--text-3);text-decoration:none;">Privacy</a>
+  </div>
 </div>
 
 <div id="player-screen" class="screen">
@@ -380,7 +393,6 @@ var provider=new firebase.auth.GoogleAuthProvider();
 provider.addScope('https://www.googleapis.com/auth/drive.file');
 provider.addScope('https://www.googleapis.com/auth/spreadsheets');
 
-// ── Sign in: popup for all browsers (works on desktop + iOS Safari) ──
 function signIn(){
   auth.signInWithPopup(provider).then(function(result){
     if(result&&result.credential){
@@ -426,7 +438,6 @@ function updateAuthUI(user){
   }
 }
 
-// ── Auth state: getRedirectResult handles iOS Safari's popup→redirect fallback ──
 auth.onAuthStateChanged(function(user){
   if(user){
     currentUser=user;
@@ -449,13 +460,9 @@ function loadUserProfile(user){
   db.collection('users').doc(user.uid).get().then(function(doc){
     if(doc.exists&&doc.data().sheetId){
       userSheetUrl=doc.data().sheetUrl;
-      var sheetId=doc.data().sheetId;
       var token=localStorage.getItem('et_gtoken');
-      if(token){
-        setupUserProfile(user,token);
-      } else {
-        showNoVideosState(userSheetUrl);
-      }
+      if(token){setupUserProfile(user,token);}
+      else{showNoVideosState(userSheetUrl);}
     } else {
       var token=localStorage.getItem('et_gtoken');
       if(token){setupUserProfile(user,token);}
@@ -801,13 +808,12 @@ window.addEventListener('popstate',function(){
 });
 
 loadVideos();
-</script>
-<script>
-  if('serviceWorker' in navigator){
-    window.addEventListener('load', function(){
-      navigator.serviceWorker.register('/sw.js');
-    });
-  }
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/sw.js');
+  });
+}
 </script>
 
 </body>
