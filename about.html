@@ -24,41 +24,44 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sans-serif;line-height:1.7;}
 
-nav{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;max-width:680px;margin:0 auto;}
+/* ── Single width token used everywhere ── */
+.wrap{width:100%;max-width:900px;margin-left:auto;margin-right:auto;padding-left:clamp(16px,4vw,40px);padding-right:clamp(16px,4vw,40px);}
+
+nav{display:flex;align-items:center;justify-content:space-between;padding-top:20px;padding-bottom:20px;}
 .nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text);}
 .nav-name{font-size:17px;font-weight:700;color:var(--text);}
 .nav-link{font-size:14px;color:var(--red);font-weight:600;text-decoration:none;background:var(--red-light);padding:8px 16px;border-radius:20px;}
 
-.hero{max-width:680px;margin:0 auto;padding:32px 24px 0;}
+.hero{padding-top:32px;}
 .hero-eyebrow{display:inline-flex;align-items:center;gap:6px;background:var(--red-light);color:var(--red);font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;margin-bottom:20px;text-transform:uppercase;letter-spacing:0.5px;}
-.hero h1{font-size:clamp(32px,6vw,52px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:20px;color:var(--text);}
+.hero h1{font-size:clamp(28px,5vw,52px);font-weight:800;letter-spacing:-1.5px;line-height:1.1;margin-bottom:20px;color:var(--text);}
 .hero h1 span{color:var(--red);}
-.hero-sub{font-size:18px;color:var(--text-2);line-height:1.7;max-width:560px;margin-bottom:0;}
+.hero-sub{font-size:18px;color:var(--text-2);line-height:1.7;margin-bottom:0;}
 
-.story{max-width:680px;margin:0 auto;padding:24px 24px 0;}
+.story{padding-top:24px;}
 .story p{font-size:17px;color:var(--text-2);margin-bottom:20px;line-height:1.8;}
 .story p strong{color:var(--text);font-weight:600;}
 .story .highlight{background:var(--red-light);border-left:3px solid var(--red);padding:16px 20px;border-radius:0 10px 10px 0;margin:28px 0;}
 .story .highlight p{color:var(--text);font-size:18px;font-style:italic;margin:0;}
 
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:680px;margin:40px auto;padding:0 24px;}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:40px 0;}
 .stat{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;}
 .stat-number{font-size:28px;font-weight:800;color:var(--red);letter-spacing:-1px;}
 .stat-label{font-size:12px;color:var(--text-3);margin-top:4px;line-height:1.4;}
 
-.why-section{max-width:680px;margin:0 auto;padding:0 24px;}
+.why-section{padding-top:0;}
 .why-grid{display:flex;flex-direction:column;gap:12px;margin-top:20px;}
 .why-item{display:flex;gap:16px;align-items:flex-start;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
 .why-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;background:var(--red-light);}
 .why-title{font-size:15px;font-weight:600;margin-bottom:4px;color:var(--text);}
 .why-text{font-size:13px;color:var(--text-2);line-height:1.6;}
 
-.night-banner{max-width:680px;margin:40px auto;padding:0 24px;}
-.night-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;position:relative;overflow:hidden;}
+.night-banner{margin:40px 0 0;}
+.night-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;}
 .night-card h3{font-size:20px;font-weight:800;margin-bottom:10px;letter-spacing:-0.5px;color:var(--text);}
 .night-card p{font-size:14px;color:var(--text-2);line-height:1.7;}
 
-.donate-section{max-width:680px;margin:0 auto;padding:0 24px 60px;}
+.donate-section{margin:40px 0 0;padding-bottom:60px;}
 .donate-card{background:var(--card);border:2px dashed var(--border);border-radius:var(--radius);padding:28px;text-align:center;}
 .donate-emoji{font-size:40px;margin-bottom:12px;}
 .donate-card h3{font-size:20px;font-weight:700;margin-bottom:8px;color:var(--text);}
@@ -66,10 +69,17 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:20px 2
 .donate-btn{display:inline-block;background:var(--red);color:white;font-size:15px;font-weight:600;padding:14px 28px;border-radius:12px;text-decoration:none;font-family:inherit;}
 .donate-note{font-size:12px;color:var(--text-3);margin-top:12px;}
 
+.cta-section{margin:40px 0;text-align:center;}
 .cta-btn{display:inline-block;background:var(--red);color:white;font-size:17px;font-weight:700;padding:18px 48px;border-radius:14px;text-decoration:none;letter-spacing:-0.3px;}
+.cta-note{font-size:12px;color:var(--text-3);margin-top:10px;}
 
 footer{border-top:1px solid var(--border);padding:24px;text-align:center;font-size:12px;color:var(--text-3);}
 footer a{color:var(--red);text-decoration:none;}
+
+@media(max-width:480px){
+  .stats{grid-template-columns:1fr;}
+  .hero h1{letter-spacing:-0.5px;}
+}
 </style>
 </head>
 <body>
@@ -78,22 +88,22 @@ footer a{color:var(--red);text-decoration:none;}
   <a href="https://translate.google.com/translate?sl=en&tl=auto&u=https://earlytube.github.io/about.html" target="_blank" style="display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--text);text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,0.1);">&#127760; Translate</a>
 </div>
 
-<nav>
+<nav class="wrap">
   <a class="nav-brand" href="index.html">
     <img src="icon.png" style="width:36px;height:36px;border-radius:9px;flex-shrink:0;"/>
     <span class="nav-name">EarlyTube</span>
   </a>
-  <a class="nav-link" href="index.html" target="_blank">Open app</a>
+  <a class="nav-link" href="index.html">Open app</a>
 </nav>
 
-<div class="hero">
+<div class="hero wrap">
   <div class="hero-eyebrow">Our story</div>
   <h1>Same videos they love.<br/><span>But</span> no rewind. No forward. Just a video, played from start to finish.</h1>
   <p class="hero-sub" style="font-size:22px;font-weight:600;color:var(--text);margin-bottom:8px;">I have always wondered — what if he never knew?</p>
   <p class="hero-sub">Fifteen years of watching. Now a tool for every family starting out — before the habit forms.</p>
 </div>
 
-<div class="story">
+<div class="story wrap">
   <p>My son is 16 now. When he was 11 months old, he picked up a phone at a family party and everyone gasped at how fast his little fingers moved across the screen. <strong>They wowed. We all did.</strong> Fifteen years later, people still say it. But it doesn't feel the same anymore.</p>
 
   <p>He is on the autism spectrum. And somewhere along the way, YouTube became something more than entertainment. The rewind button — that tiny, innocent slider — became a loop he couldn't escape. The same one second, over and over. Not watching. <strong>Stimming. For hours.</strong> And if I didn't intervene — who knows. Maybe all day.</p>
@@ -115,19 +125,18 @@ footer a{color:var(--red);text-decoration:none;}
   <p>It's not a cure. It's not therapy. It's a small tool — a player that simply <strong>removes the controls</strong>. No rewind. No skip. No progress bar. Just the video, playing forward. For every child diagnosed today, tomorrow, next year — before the habit forms. <strong>Before they know there's anything else.</strong></p>
 </div>
 
-<div class="stats">
+<div class="stats wrap">
   <div class="stat"><div class="stat-number">Mom</div><div class="stat-label">Built this for your child<br/>and for hopefully mine.</div></div>
   <div class="stat"><div class="stat-number">Pure</div><div class="stat-label">"What if they never knew?"<br/>A distraction-free habit.</div></div>
   <div class="stat"><div class="stat-number">0</div><div class="stat-label">Ads or hidden tracking.<br/>Core tools are free.</div></div>
 </div>
 
-
-<div style="max-width:680px;margin:0 auto 40px;padding:0 24px;text-align:center;">
-  <a class="cta-btn" href="index.html" target="_blank">Open EarlyTube</a>
-  <div style="font-size:12px;color:var(--text-3);margin-top:10px;">No download. No sign up. Works on any device.</div>
+<div class="cta-section wrap">
+  <a class="cta-btn" href="index.html">Open EarlyTube</a>
+  <div class="cta-note">No download. No sign up. Works on any device.</div>
 </div>
 
-<div class="why-section">
+<div class="why-section wrap">
   <div class="why-grid">
     <div class="why-item">
       <div class="why-icon">&#128274;</div>
@@ -160,14 +169,14 @@ footer a{color:var(--red);text-decoration:none;}
   </div>
 </div>
 
-<div class="night-banner">
+<div class="night-banner wrap">
   <div class="night-card">
     <h3>Built by a mom. Still building.</h3>
     <p>No team, no funding, no coding experience. Just a mom who refused to let the idea die — and a tool that was finally ready to help. Even if not my child.<br><br><strong>You don't have the excuse I had then — or now. Try it.</strong></p>
   </div>
 </div>
 
-<div class="donate-section">
+<div class="donate-section wrap">
   <div class="donate-card">
     <div class="donate-emoji">&#128155;</div>
     <h3>This exists because I refused to give up.</h3>
@@ -179,9 +188,9 @@ footer a{color:var(--red);text-decoration:none;}
 
 <footer>
   Made with love by a mom. &nbsp;·&nbsp;
-  <a href="index.html" target="_blank">Open EarlyTube</a> &nbsp;·&nbsp;
+  <a href="index.html">Open EarlyTube</a> &nbsp;·&nbsp;
   <a href="faq.html">FAQ</a> &nbsp;·&nbsp;
-  <a href="contact.html" target="_blank">Contact us</a> &nbsp;·&nbsp;
+  <a href="contact.html">Contact us</a> &nbsp;·&nbsp;
   <a href="privacy.html">Privacy</a> &nbsp;·&nbsp;
   <a href="mailto:earlytubeapp@gmail.com">earlytubeapp@gmail.com</a>
 </footer>
