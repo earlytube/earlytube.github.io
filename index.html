@@ -655,13 +655,29 @@ function createAndSaveSheet(user, token) {
       showNoVideosState(sheetUrl);
     });
   }).catch(function(e) {
-    console.error('createAndSaveSheet failed:', e);
-    showNoVideosState(null);
-    // Surface the error so you can see it in Cloudflare logs too
-    throw e;
+    if (e && e.code === 'SCOPE_DENIED') {
+      // Re-prompt: force Google to show the permissions screen again
+      var consentProvider = new firebase.auth.GoogleAuthProvider();
+      consentProvider.addScope('https://www.googleapis.com/auth/drive.file');
+      consentProvider.addScope('https://www.googleapis.com/auth/spreadsheets');
+      consentProvider.setCustomParameters({ prompt: 'consent' }); // ← forces re-consent
+      auth.signInWithPopup(consentProvider).then(function(result) {
+        if (result && result.credential && result.credential.accessToken) {
+          var newToken = result.credential.accessToken;
+          localStorage.setItem('et_gtoken', newToken);
+          createAndSaveSheet(user, newToken); // retry with fresh scoped token
+        }
+      }).catch(function(err) {
+        console.error('Re-consent failed:', err);
+        showNoVideosState(null);
+      });
+    } else {
+      console.error('createAndSaveSheet failed:', e);
+      showNoVideosState(null);
+    }
   });
 }
-function showNoVideosState(sheetUrl){
+  function showNoVideosState(sheetUrl){
   document.getElementById('personal-card').style.display='none';
   document.getElementById('no-videos-card').style.display='block';
   document.getElementById('suggested-card').style.display='block';
@@ -672,39 +688,54 @@ function showNoVideosState(sheetUrl){
   }
 }
 
-function createFreshSetup(token,user){
-  var name=user.displayName||'My';
-  return fetch('https://www.googleapis.com/drive/v3/files?q=name%3D%27EarlyTube%27+and+mimeType%3D%27application%2Fvnd.google-apps.folder%27+and+trashed%3Dfalse',{
-    headers:{'Authorization':'Bearer '+token}
-  }).then(function(r){return r.json();})
-  .then(function(data){
-    if(data.files&&data.files.length>0){return data.files[0].id;}
-    return fetch('https://www.googleapis.com/drive/v3/files',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-      body:JSON.stringify({name:'EarlyTube',mimeType:'application/vnd.google-apps.folder'})
-    }).then(function(r){return r.json();}).then(function(f){return f.id;});
+function createFreshSetup(token, user) {
+  var name = user.displayName || 'My';
+
+  return fetch(
+    'https://www.googleapis.com/drive/v3/files' +
+    '?q=name%3D%27EarlyTube%27+and+mimeType%3D%27application%2Fvnd.google-apps.folder%27+and+trashed%3Dfalse',
+    { headers: { 'Authorization': 'Bearer ' + token } }
+  ).then(function(r) {
+    if (r.status === 403) throw { code: 'SCOPE_DENIED' };  // ← key change
+    if (!r.ok) throw { code: 'DRIVE_ERROR', status: r.status };
+    return r.json();
   })
-  .then(function(folderId){
-    return fetch('https://sheets.googleapis.com/v4/spreadsheets',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-      body:JSON.stringify({
-        properties:{title:'EarlyTube — '+name},
-        sheets:[{properties:{title:'Videos'},data:[{rowData:[{values:[
-          {userEnteredValue:{stringValue:'title'}},
-          {userEnteredValue:{stringValue:'channel'}},
-          {userEnteredValue:{stringValue:'id'}},
-          {userEnteredValue:{stringValue:'category'}},
-          {userEnteredValue:{stringValue:'age'}},
-          {userEnteredValue:{stringValue:'notes'}}
+  .then(function(data) {
+    if (data.files && data.files.length > 0) return data.files[0].id;
+    return fetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: 'EarlyTube', mimeType: 'application/vnd.google-apps.folder' })
+    }).then(function(r) {
+      if (r.status === 403) throw { code: 'SCOPE_DENIED' };
+      return r.json();
+    }).then(function(f) { return f.id; });
+  })
+  .then(function(folderId) {
+    return fetch('https://sheets.googleapis.com/v4/spreadsheets', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        properties: { title: 'EarlyTube — ' + name },
+        sheets: [{ properties: { title: 'Videos' }, data: [{ rowData: [{ values: [
+          { userEnteredValue: { stringValue: 'title' } },
+          { userEnteredValue: { stringValue: 'channel' } },
+          { userEnteredValue: { stringValue: 'id' } },
+          { userEnteredValue: { stringValue: 'category' } },
+          { userEnteredValue: { stringValue: 'age' } },
+          { userEnteredValue: { stringValue: 'notes' } }
         ]}]}]}]
       })
-    }).then(function(r){return r.json();})
-    .then(function(sheet){
-      return fetch('https://www.googleapis.com/drive/v3/files/'+sheet.spreadsheetId+'?addParents='+folderId+'&removeParents=root',{
-        method:'PATCH',headers:{'Authorization':'Bearer '+token}
-      }).then(function(){return{id:sheet.spreadsheetId};});
+    }).then(function(r) {
+      if (r.status === 403) throw { code: 'SCOPE_DENIED' };
+      return r.json();
+    })
+    .then(function(sheet) {
+      return fetch(
+        'https://www.googleapis.com/drive/v3/files/' + sheet.spreadsheetId +
+        '?addParents=' + folderId + '&removeParents=root',
+        { method: 'PATCH', headers: { 'Authorization': 'Bearer ' + token } }
+      ).then(function() { return { id: sheet.spreadsheetId }; });
     });
   });
 }
