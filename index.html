@@ -904,8 +904,9 @@ function handleWatch(){var id=extractId(document.getElementById('url-input').val
 
 function prepareVideo(id){
   pendingId=id;
-  document.getElementById('url-error').textContent='';document.getElementById('url-input').value='';
-  document.getElementById('yt-iframe').src='https://www.youtube.com/embed/'+id+'?autoplay=0&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1';
+  document.getElementById('url-error').textContent='';
+  document.getElementById('url-input').value='';
+  document.getElementById('yt-iframe').src='https://www.youtube.com/embed/'+id+'?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1';
   document.getElementById('player-overlay').style.display='none';
   document.getElementById('tap-to-play').style.display='flex';
   document.getElementById('player-top').style.display='block';
@@ -913,13 +914,15 @@ function prepareVideo(id){
   document.getElementById('lock-toast').classList.add('hidden');
   document.getElementById('next-videos').style.display='';
   document.querySelector('.next-title').style.display='';
-  buildNextVideos(id);show('player-screen');
+  buildNextVideos(id);
+  show('player-screen');
 }
+
 function startVideo(){
-  document.getElementById('yt-iframe').src='https://www.youtube.com/embed/'+pendingId+'?autoplay=1&controls=0&disablekb=1&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1';
   document.getElementById('tap-to-play').style.display='none';
 }
-function lockControls(){
+
+  function lockControls(){
   document.getElementById('player-overlay').style.display='block';
   document.getElementById('player-top').style.display='none';
   document.getElementById('player-bottom').style.display='block';
