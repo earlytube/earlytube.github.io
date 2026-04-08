@@ -562,29 +562,51 @@ function checkWhitelist(user){
 }
 ─────────────────────────────────────────────────────────────────────────── */
 
-function loadUserProfile(user){
-  db.collection('users').doc(user.uid).get().then(function(doc){
-    if(doc.exists){
-      var data=doc.data();
-      if(data.pin){parentPin=data.pin;localStorage.setItem('et_pin',data.pin);}
-      if(data.sheetId){
-        userSheetUrl=data.sheetUrl;
-        var token=localStorage.getItem('et_gtoken');
-        if(token){setupUserProfile(user,token);}
-        else{showNoVideosState(userSheetUrl);}
+function loadUserProfile(user) {
+  db.collection('users').doc(user.uid).get().then(function(doc) {
+    if (doc.exists) {
+      var data = doc.data();
+      if (data.pin) { parentPin = data.pin; localStorage.setItem('et_pin', data.pin); }
+
+      if (data.sheetId) {
+        userSheetUrl = data.sheetUrl;
+        var token = localStorage.getItem('et_gtoken');
+        if (token) {
+          setupUserProfile(user, token);
+        } else {
+          // Has a sheet but token is gone — re-auth silently to get a fresh one
+          recoverWithFreshToken(user);
+        }
       } else {
-        var token=localStorage.getItem('et_gtoken');
-        if(token){setupUserProfile(user,token);}
-        else{showNoVideosState(null);}
+        // Doc exists but no sheet was ever created — recover
+        recoverWithFreshToken(user);
       }
     } else {
-      var token=localStorage.getItem('et_gtoken');
-      if(token){setupUserProfile(user,token);}
-      else{showNoVideosState(null);}
+      // No Firestore doc at all (Sowmya's case) — recover
+      recoverWithFreshToken(user);
     }
+  }).catch(function(e) {
+    console.error('loadUserProfile error:', e);
+    showNoVideosState(null);
   });
 }
 
+// Silent re-auth popup → fresh token → full setup
+// Google auto-completes this instantly if the user is already signed in to Google
+function recoverWithFreshToken(user) {
+  auth.signInWithPopup(provider).then(function(result) {
+    if (result && result.credential && result.credential.accessToken) {
+      var token = result.credential.accessToken;
+      localStorage.setItem('et_gtoken', token);
+      setupUserProfile(user, token);
+    } else {
+      showNoVideosState(null);
+    }
+  }).catch(function(e) {
+    console.error('recoverWithFreshToken failed:', e);
+    showNoVideosState(null);
+  });
+}
 function setupUserProfile(user,token){
   db.collection('users').doc(user.uid).get().then(function(doc){
     if(doc.exists&&doc.data().sheetId){
@@ -621,22 +643,24 @@ function setupUserProfile(user,token){
   });
 }
 
-function createAndSaveSheet(user,token){
-  createFreshSetup(token,user).then(function(sheetData){
-    var sheetUrl='https://docs.google.com/spreadsheets/d/'+sheetData.id+'/edit';
-    userSheetUrl=sheetUrl;
-    db.collection('users').doc(user.uid).set({
-      name:user.displayName,email:user.email,
-      sheetId:sheetData.id,sheetUrl:sheetUrl,
-      createdAt:firebase.firestore.FieldValue.serverTimestamp()
-    },{merge:true});
-    showNoVideosState(sheetUrl);
-  }).catch(function(e){
-    console.error('Setup error',e);
+function createAndSaveSheet(user, token) {
+  return createFreshSetup(token, user).then(function(sheetData) {
+    var sheetUrl = 'https://docs.google.com/spreadsheets/d/' + sheetData.id + '/edit';
+    userSheetUrl = sheetUrl;
+    return db.collection('users').doc(user.uid).set({
+      name: user.displayName, email: user.email,
+      sheetId: sheetData.id, sheetUrl: sheetUrl,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, { merge: true }).then(function() {
+      showNoVideosState(sheetUrl);
+    });
+  }).catch(function(e) {
+    console.error('createAndSaveSheet failed:', e);
     showNoVideosState(null);
+    // Surface the error so you can see it in Cloudflare logs too
+    throw e;
   });
 }
-
 function showNoVideosState(sheetUrl){
   document.getElementById('personal-card').style.display='none';
   document.getElementById('no-videos-card').style.display='block';
@@ -800,21 +824,40 @@ function savePersonalVideo(){
   .catch(function(){return writeVideoToSheet(id,'Video '+id,category,token);});
 }
 
-function writeVideoToSheet(id,title,category,token){
-  return db.collection('users').doc(currentUser.uid).get().then(function(doc){
-    if(!doc.exists||!doc.data().sheetId){alert('Sheet not found. Please sign out and sign in again.');closeAddVideoModal();return;}
-    var sheetId=doc.data().sheetId;
-    return fetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/Videos!A:F:append?valueInputOption=RAW',{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},
-      body:JSON.stringify({values:[[title,'',id,category,'','']]})
-    }).then(function(){closeAddVideoModal();loadPersonalVideos(sheetId,token);})
-    .catch(function(e){
-      if(e&&e.status===401){
-        refreshTokenAndRetry(function(newToken){writeVideoToSheet(id,title,category,newToken);});
+function writeVideoToSheet(id, title, category, token) {
+  return db.collection('users').doc(currentUser.uid).get().then(function(doc) {
+    if (!doc.exists || !doc.data().sheetId) {
+      // No doc — create it, then re-open the add modal so the user can retry
+      closeAddVideoModal();
+      return createAndSaveSheet(currentUser, token).then(function() {
+        // Give Firestore a moment to settle, then re-open add modal
+        setTimeout(function() { showAddVideoModal(); }, 600);
+      }).catch(function() {
+        alert('Could not set up your video list. Please sign out and sign in again.');
+      });
+    }
+
+    var sheetId = doc.data().sheetId;
+    return fetch(
+      'https://sheets.googleapis.com/v4/spreadsheets/' + sheetId +
+      '/values/Videos!A:F:append?valueInputOption=RAW',
+      {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ values: [[title, '', id, category, '', '']] })
+      }
+    ).then(function(r) {
+      if (!r.ok) throw { status: r.status };
+      closeAddVideoModal();
+      loadPersonalVideos(sheetId, token);
+    }).catch(function(e) {
+      if (e && e.status === 401) {
+        refreshTokenAndRetry(function(newToken) { writeVideoToSheet(id, title, category, newToken); });
       } else {
-        console.error(e);alert('Failed to save. Please try again.');
-        var btn=document.getElementById('add-video-submit');btn.textContent='Save video';btn.disabled=false;
+        console.error('writeVideoToSheet error:', e);
+        alert('Failed to save. Please try again.');
+        var btn = document.getElementById('add-video-submit');
+        btn.textContent = 'Save video'; btn.disabled = false;
       }
     });
   });
