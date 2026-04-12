@@ -1130,16 +1130,20 @@ function requestClose(){pinAction='close';showPin('Parent PIN required','Enter y
 function requestSettings(){pinAction='settings';showPin('Parent PIN required','Enter your PIN to open Settings');}
 function showPin(title,sub){pinBuffer='';updateDots();document.getElementById('pin-error').textContent='';document.getElementById('pin-title').textContent=title;document.getElementById('pin-subtitle').textContent=sub;document.getElementById('pin-overlay').style.display='flex';}
 function pinPress(d){if(pinBuffer.length>=4)return;pinBuffer+=d;updateDots();if(pinBuffer.length===4)setTimeout(checkPin,120);}
-function pinClear(){pinBuffer=pinBuffer.slice(0,-1);updateDots();}function pinCancel(){
+function pinClear(){pinBuffer=pinBuffer.slice(0,-1);updateDots();}
+  
+  function pinCancel(){
   document.getElementById('pin-overlay').style.display='none';
   pinBuffer='';
-  // If video was playing, return to it
+  pinAction=null;
   var player=document.getElementById('player-screen');
   if(player&&player.style.display==='flex'){
-    // Video stays playing — just dismiss the PIN overlay
-    return;
+    document.getElementById('yt-iframe').contentWindow.postMessage(
+      '{"event":"command","func":"playVideo","args":""}','*'
+    );
   }
 }
+
 function updateDots(){for(var i=0;i<4;i++)document.getElementById('d'+i).className='dot'+(i<pinBuffer.length?' filled':'');}
 function checkPin(){
   if(pinBuffer===parentPin){
