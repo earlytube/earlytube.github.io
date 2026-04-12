@@ -1317,13 +1317,20 @@ var sessionEndTracked=false;
 function trackSessionEndOnce(){
   if(sessionEndTracked)return;
   sessionEndTracked=true;
-  trackSessionEnd();
+  var duration=Math.round((Date.now()-etSession.start)/1000);
+  if(duration<5)return;
+  gtag('event','et_session_end',{
+    device_id:getDeviceId(),
+    duration_seconds:duration,
+    videos_played:etSession.videosPlayed,
+    tab_used:etSession.tabUsed,
+    grade_selected:etSession.gradeSelected,
+    subject_selected:etSession.subjectSelected,
+    is_standalone:etSession.isStandalone,
+    is_signed_in:!!currentUser
+  });
 }
-document.addEventListener('visibilitychange',function(){
-  if(document.visibilityState==='hidden')trackSessionEndOnce();
-});
 window.addEventListener('pagehide',trackSessionEndOnce);
-
 loadVideos();
 
 if('serviceWorker' in navigator){
