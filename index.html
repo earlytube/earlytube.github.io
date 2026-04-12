@@ -168,6 +168,13 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sa
 .btn-back{width:100%;padding:14px;border-radius:10px;background:var(--card);color:var(--text);border:1px solid var(--border);font-size:15px;font-family:inherit;cursor:pointer;}
 .player-back-bar{background:var(--player-bg);padding:8px 20px;width:100%;}
 .player-back-bar button{width:100%;padding:12px;border-radius:8px;background:none;border:1px solid #444;color:#888;font-size:13px;font-family:inherit;cursor:pointer;}
+/* ── TABS ────────────────────────────────────── */
+.tab-bar{display:flex;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.tab-btn{flex:1;padding:9px 12px;background:none;border:none;border-bottom:2px solid transparent;font-size:13px;font-weight:600;color:var(--text-3);font-family:inherit;cursor:pointer;transition:color 0.15s,border-color 0.15s;margin-bottom:-1px;}
+.tab-btn.active{color:var(--red);border-bottom-color:var(--red);}
+.tab-btn:hover:not(.active){color:var(--text-2);}
+.edu-controls{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.edu-select{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -252,26 +259,49 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sa
       <div class="error-msg" id="url-error"></div>
     </div>
 
-    <div class="card" id="suggested-card">
-      <div class="section-header">
-        <div class="section-left">
-          <div class="section-title">Suggested videos</div>
-          <div class="live-dot" id="live-dot" style="display:none"></div>
-        </div>
-        <select class="age-select" id="age-select" onchange="renderVideos()">
-          <option value="toddler">Toddler (2-3)</option>
-          <option value="prek">Pre-K (3-5)</option>
-          <option value="primary">Primary (5-8)</option>
-          <option value="junior">Junior (8-12)</option>
-          <option value="teen">Teen (12-16)</option>
-          <option value="teenplus">Teen+ (16+)</option>
-        </select>
-      </div>
-      <div class="video-list" id="video-list">
-        <div class="loading-state">Loading videos...</div>
-      </div>
-    </div>
+<div class="card" id="suggested-card">
 
+  <div class="tab-bar">
+    <button class="tab-btn active" id="tab-btn-leisure" onclick="switchTab('leisure')">Leisure</button>
+    <button class="tab-btn" id="tab-btn-educational" onclick="switchTab('educational')">Educational</button>
+  </div>
+
+  <div id="tab-leisure">
+    <div class="section-header">
+      <div class="section-left">
+        <div class="section-title">Suggested videos</div>
+        <div class="live-dot" id="live-dot" style="display:none"></div>
+      </div>
+      <select class="age-select" id="age-select" onchange="renderVideos()">
+        <option value="toddler">Toddler (2-3)</option>
+        <option value="prek">Pre-K (3-5)</option>
+        <option value="primary">Primary (5-8)</option>
+        <option value="junior">Junior (8-12)</option>
+        <option value="teen">Teen (12-16)</option>
+        <option value="teenplus">Teen+ (16+)</option>
+      </select>
+    </div>
+    <div class="video-list" id="video-list">
+      <div class="loading-state">Loading videos...</div>
+    </div>
+  </div>
+
+  <div id="tab-educational" style="display:none;">
+    <div class="edu-controls">
+      <select class="edu-select" id="grade-select" onchange="updateSubjectOptions();renderEducationalVideos();">
+        <option value="9">Grade 9</option>
+        <option value="10">Grade 10</option>
+        <option value="11">Grade 11</option>
+        <option value="12">Grade 12</option>
+      </select>
+      <select class="edu-select" id="subject-select" onchange="renderEducationalVideos()"></select>
+    </div>
+    <div class="video-list" id="edu-video-list">
+      <div class="loading-state">Loading curriculum...</div>
+    </div>
+  </div>
+
+</div>
     <div class="info-card">
       <p id="info-card-text"><strong>For parents:</strong> Select your child's age above to see suitable videos. Videos play with no controls visible — your child cannot rewind, skip, or scrub. Closing always requires the parent PIN. <strong>Default PIN is 1234.</strong> Long press logo to open Settings and change PIN.</p>
     </div>
@@ -895,6 +925,9 @@ function writeVideoToSheet(id, title, category, token) {
 }
 
 var CSV_URL='https://docs.google.com/spreadsheets/d/e/2PACX-1vSMkmJi2zz99BE6d7STDfVXiBgd1eyfZSdIx4TUsst05Xm4m7G6tz9zGTJXmoVku1DQpmC52vWpOlhI/pub?output=csv';
+var CURRICULUM_CSV_URL='PASTE_YOUR_CURRICULUM_SHEET_CSV_URL_HERE';
+var allCurriculumVideos=[];
+var curriculumLoaded=false;
 var CONTACT_EMAIL='earlytubeapp@gmail.com';
 var FALLBACK={
   toddler:[{id:'XqZsoesa55w',title:'Baby Shark',channel:'Pinkfong',tag:'Animals'},{id:'yCjJyiqpAuU',title:'Animal Sounds',channel:'Sesame Street',tag:'Animals'},{id:'tBhkzYAqhMI',title:'Wild Animals for Kids',channel:'Nat Geo Kids',tag:'Nature'},{id:'pRpeEdMmmQ0',title:'The Alphabet A to Z',channel:'Dave and Ava',tag:'Letters'}],
@@ -918,6 +951,74 @@ function loadVideos(){
     document.getElementById('live-dot').style.display=allVideos.length?'block':'none';
     renderVideos();
   }).catch(function(){renderVideos();});
+}
+function loadCurriculumVideos(){
+  if(curriculumLoaded)return;
+  fetch(CURRICULUM_CSV_URL).then(function(r){return r.text();})
+  .then(function(csv){
+    var rows=parseCSV(csv);
+    allCurriculumVideos=rows.filter(function(r){
+      return r.youtube_id&&/^[a-zA-Z0-9_-]{11}$/.test(r.youtube_id.trim());
+    });
+    curriculumLoaded=true;
+    updateSubjectOptions();
+    renderEducationalVideos();
+  }).catch(function(){
+    document.getElementById('edu-video-list').innerHTML='<div class="empty-state">Curriculum coming soon.</div>';
+  });
+}
+
+function updateSubjectOptions(){
+  var grade=document.getElementById('grade-select').value;
+  var subjects=[];
+  allCurriculumVideos.forEach(function(v){
+    if(String(v.grade||'').trim()===grade&&subjects.indexOf(v.subject)===-1){
+      subjects.push(v.subject);
+    }
+  });
+  subjects.sort();
+  var sel=document.getElementById('subject-select');
+  var prev=sel.value;
+  sel.innerHTML='';
+  subjects.forEach(function(s){
+    var opt=document.createElement('option');
+    opt.value=s;opt.textContent=s;
+    sel.appendChild(opt);
+  });
+  if(prev&&subjects.indexOf(prev)>-1)sel.value=prev;
+}
+
+function renderEducationalVideos(){
+  if(!curriculumLoaded){
+    document.getElementById('edu-video-list').innerHTML='<div class="loading-state">Loading curriculum...</div>';
+    return;
+  }
+  var grade=document.getElementById('grade-select').value;
+  var subject=document.getElementById('subject-select').value;
+  var f=allCurriculumVideos.filter(function(v){
+    return String(v.grade||'').trim()===grade&&(v.subject||'').trim()===subject;
+  });
+  var html='';
+  if(!f.length){html='<div class="empty-state">No videos yet for this selection.</div>';}
+  else{f.forEach(function(v){
+    var id=(v.youtube_id||'').trim();
+    html+='<div class="video-item" onclick="prepareVideo(\''+escAttr(id)+'\')">'
+      +'<div class="video-thumb"><img src="https://img.youtube.com/vi/'+escAttr(id)+'/mqdefault.jpg" alt="" loading="lazy"/></div>'
+      +'<div class="video-info">'
+      +'<div class="video-title">'+escHtml(v.title||v.chapter||'')+'</div>'
+      +'<div class="video-sub">'+escHtml(v.channel||'')+'</div>'
+      +'<div class="video-tag">'+escHtml(v.unit||v.chapter||'')+'</div>'
+      +'</div></div>';
+  });}
+  document.getElementById('edu-video-list').innerHTML=html;
+}
+
+function switchTab(tab){
+  document.getElementById('tab-leisure').style.display=tab==='leisure'?'block':'none';
+  document.getElementById('tab-educational').style.display=tab==='educational'?'block':'none';
+  document.getElementById('tab-btn-leisure').className='tab-btn'+(tab==='leisure'?' active':'');
+  document.getElementById('tab-btn-educational').className='tab-btn'+(tab==='educational'?' active':'');
+  if(tab==='educational')loadCurriculumVideos();
 }
 
 function renderVideos(){
