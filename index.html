@@ -953,10 +953,10 @@ function loadVideos(){
   }).catch(function(){renderVideos();});
 }
 function loadCurriculumVideos(){
-  if(curriculumLoaded)return;
-  fetch(CURRICULUM_CSV_URL+'&t='+Date.now()).then(function(r){return r.text();})
+ if(curriculumLoaded)return;
+ fetch(CURRICULUM_CSV_URL).then(function(r){return r.text();})
   .then(function(csv){
-    var rows=parseCSV(csv);
+   var rows=parseCSV(csv);
  allCurriculumVideos=rows.filter(function(r){
   return (r.id_status||'').toUpperCase()==='YES';
 });
