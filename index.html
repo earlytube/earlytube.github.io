@@ -1001,7 +1001,7 @@ function renderEducationalVideos(){
   var html='';
   if(!f.length){html='<div class="empty-state">No videos yet for this selection.</div>';}
   else{f.forEach(function(v){
-    var id=(v.youtube_id||'').trim();
+var id=(v.youtube_id||'').trim().replace(/[^a-zA-Z0-9_-]/g,'');
     html+='<div class="video-item" onclick="prepareVideo(\''+escAttr(id)+'\')">'
       +'<div class="video-thumb"><img src="https://img.youtube.com/vi/'+escAttr(id)+'/mqdefault.jpg" alt="" loading="lazy"/></div>'
       +'<div class="video-info">'
