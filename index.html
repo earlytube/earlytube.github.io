@@ -175,8 +175,6 @@ body{background:var(--bg);color:var(--text);font-family:'Inter',-apple-system,sa
 .tab-btn:hover:not(.active){color:var(--text-2);}
 .edu-controls{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
 .edu-select{padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--input-bg);color:var(--text);font-size:13px;font-family:inherit;outline:none;cursor:pointer;}
-.btn-lock:disabled{opacity:0.4;cursor:not-allowed;}
-.btn-lock:disabled:after{content:' — tap play first';font-size:11px;font-weight:400;opacity:0.8;}
 </style>
 </head>
 <body>
@@ -1086,7 +1084,6 @@ function prepareVideo(id){
   document.getElementById('next-videos').style.display='';
   document.querySelector('.next-title').style.display='';
 document.getElementById('yt-iframe').src='https://www.youtube.com/embed/'+id+'?autoplay=0&controls=1&disablekb=0&fs=0&modestbranding=1&rel=0&iv_load_policy=3&playsinline=1';
-document.getElementById('btn-lock').disabled=true;
   buildNextVideos(id);
   show('player-screen');
 }
@@ -1201,19 +1198,6 @@ window.addEventListener('popstate',function(){
   if(player&&player.style.display==='flex'){requestClose();}
 });
 
-  window.addEventListener('message',function(e){
-  if(e.origin!=='https://www.youtube.com')return;
-  try{
-    var data=JSON.parse(e.data);
-    if(data.event==='onStateChange'){
-      var btn=document.getElementById('btn-lock');
-      if(data.info===1){
-        // Playing — enable lock
-        if(btn)btn.disabled=false;
-      }
-    }
-  }catch(err){}
-});
   
 loadVideos();
 
