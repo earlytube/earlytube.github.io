@@ -1313,10 +1313,16 @@ function trackCurriculumSelected(grade,subject){
 }
 
 /* ── SESSION END LISTENER ────────────────────────────────────────────────── */
+var sessionEndTracked=false;
+function trackSessionEndOnce(){
+  if(sessionEndTracked)return;
+  sessionEndTracked=true;
+  trackSessionEnd();
+}
 document.addEventListener('visibilitychange',function(){
-  if(document.visibilityState==='hidden')trackSessionEnd();
+  if(document.visibilityState==='hidden')trackSessionEndOnce();
 });
-window.addEventListener('pagehide',trackSessionEnd);
+window.addEventListener('pagehide',trackSessionEndOnce);
 
 loadVideos();
 
