@@ -841,6 +841,7 @@ function signOut(){
 function updateAuthUI(user){
   if(user){
     document.getElementById('auth-signed-in').style.display='flex';
+    document.getElementById('auth-email-only').style.display='none';
     var av=document.getElementById('auth-avatar');
     if(user.photoURL){av.innerHTML='<img src="'+user.photoURL+'" alt=""/>';}
     else{av.textContent=user.displayName?user.displayName[0].toUpperCase():'U';}
@@ -850,6 +851,7 @@ function updateAuthUI(user){
     updateBetaUI();
   } else {
     document.getElementById('auth-signed-in').style.display='none';
+    // Show email-only sign out if email is saved
     var emailOnlyEl=document.getElementById('auth-email-only');
     var emailNameEl=document.getElementById('auth-email-name');
     if(userEmail&&emailOnlyEl){
@@ -867,7 +869,6 @@ function updateAuthUI(user){
     updateBetaUI();
   }
 }
-
 
 /* ── AUTH STATE CHANGE ───────────────────────────────────────────────────────
    On first sign-in: check for pending invite code from welcome modal.
