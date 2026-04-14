@@ -1227,8 +1227,14 @@ function savePersonalVideo(){
   var category=document.getElementById('add-category').value.trim()||'My Videos';
   var id=extractId(url);
   if(!id){alert('Please paste a valid YouTube link.');return;}
-  var token=localStorage.getItem('et_gtoken');
-  if(!token||!currentUser){alert('Please sign in again.');return;}
+var token=localStorage.getItem('et_gtoken');
+if(!currentUser){alert('Please sign in again.');return;}
+if(!token){
+  // No Drive token yet — request it now
+  recoverWithFreshToken(currentUser);
+  closeAddVideoModal();
+  return;
+}
   var btn=document.getElementById('add-video-submit');
   btn.textContent='Fetching title...';btn.disabled=true;
   fetch('https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v='+id+'&format=json')
