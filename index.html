@@ -1037,7 +1037,12 @@ function recoverWithFreshToken(user){
     login_hint: user.email  // ← forces correct account
   });
   auth.signInWithPopup(cp).then(function(result){
-    if(result&&result.credential&&result.credential.accessToken){
+  if(result&&result.credential&&result.credential.accessToken){
+      if(result.user.email!==user.email){
+        alert('Please use the same Google account you signed in with ('+user.email+').');
+        showNoVideosState(null);
+        return;
+      }
       var token=result.credential.accessToken;
       localStorage.setItem('et_gtoken',token);
       setupUserProfile(user,token);
