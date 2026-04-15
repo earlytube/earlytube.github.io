@@ -296,7 +296,7 @@ Hidden by default. Never shown to anonymous/email-only users.             */
   </div>
 </div>
 <div style="border-bottom:1px solid var(--border);margin-bottom:16px;"></div>
- <div id="tab-leisure">
+ <div id="tab-leisure" style="display:none;">
     <div class="section-header" style="justify-content:flex-end;">
       <select class="age-select" id="age-select" onchange="renderVideos()">
         <option value="teenplus">Teen+ (16+)</option>
@@ -311,7 +311,7 @@ Hidden by default. Never shown to anonymous/email-only users.             */
       <div class="loading-state">Loading videos...</div>
     </div>
   </div>
-  <div id="tab-educational" style="display:none;">
+  <div id="tab-educational">
     <div class="edu-controls" style="justify-content:flex-end;">
       <select class="edu-select" id="grade-select" onchange="updateSubjectOptions();renderEducationalVideos();">
         <option value="9">Grade 9</option>
@@ -1396,6 +1396,7 @@ function switchTab(tab){
   document.getElementById('tab-btn-leisure').className='tab-btn'+(tab==='leisure'?' active':'');
   document.getElementById('tab-btn-educational').className='tab-btn'+(tab==='educational'?' active':'');
   if(tab==='educational')loadCurriculumVideos();
+  switchTab('educational');
 }
 
 function renderVideos(){
