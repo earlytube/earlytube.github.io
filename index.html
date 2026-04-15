@@ -977,7 +977,7 @@ function tryGetTokenSilently(user){
   var silentProvider=new firebase.auth.GoogleAuthProvider();
   silentProvider.addScope('https://www.googleapis.com/auth/drive.file');
   silentProvider.addScope('https://www.googleapis.com/auth/spreadsheets');
-  silentProvider.setCustomParameters({prompt:'none'});
+ silentProvider.setCustomParameters({prompt:'none', login_hint:user.email});
   auth.signInWithPopup(silentProvider).then(function(result){
     if(result&&result.credential&&result.credential.accessToken){
       var token=result.credential.accessToken;
@@ -1026,7 +1026,13 @@ function loadUserProfile(user){
 
 /* ── RECOVER WITH FRESH TOKEN ───────────────────────────────────────────── */
 function recoverWithFreshToken(user){
-  auth.signInWithPopup(driveProvider).then(function(result){
+  var cp=new firebase.auth.GoogleAuthProvider();
+  cp.addScope('https://www.googleapis.com/auth/drive.file');
+  cp.addScope('https://www.googleapis.com/auth/spreadsheets');
+  cp.setCustomParameters({
+    login_hint: user.email  // ← forces correct account
+  });
+  auth.signInWithPopup(cp).then(function(result){
     if(result&&result.credential&&result.credential.accessToken){
       var token=result.credential.accessToken;
       localStorage.setItem('et_gtoken',token);
@@ -1039,6 +1045,7 @@ function recoverWithFreshToken(user){
     showNoVideosState(null);
   });
 }
+
 
 function setupUserProfile(user,token){
   db.collection('users').doc(user.uid).get().then(function(doc){
