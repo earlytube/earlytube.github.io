@@ -639,6 +639,8 @@ function onConfigLoaded(){
     return;
   }
 
+// Hide install popup — welcome modal takes priority
+  document.getElementById('install-popup').style.display='none';
   // Show welcome modal
   document.getElementById('welcome-modal').style.display='flex';
 }
@@ -859,7 +861,9 @@ function signOut(){
 
 /* ── AUTH STATE UI ──────────────────────────────────────────────────────── */
 function updateAuthUI(user){
-  if(user){
+  var isStandalone=window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
+    if(!isStandalone){document.getElementById('install-popup').style.display='flex';}
+  if(user){    
     document.getElementById('auth-signed-in').style.display='flex';
     document.getElementById('auth-email-only').style.display='none';
     var av=document.getElementById('auth-avatar');
