@@ -288,12 +288,15 @@ Hidden by default. Never shown to anonymous/email-only users.             */
 
 
 <div class="card" id="suggested-card">
-  <div class="card-header">Discover & Learn</div>
-<div class="tab-bar">
-    <button class="tab-btn active" id="tab-btn-leisure" onclick="switchTab('leisure')">Leisure</button>
-    <button class="tab-btn" id="tab-btn-educational" onclick="switchTab('educational')">Educational</button>
-</div>
-<div id="tab-leisure">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+    <div class="card-header" style="margin-bottom:0;">Discover & Learn</div>
+    <div style="display:flex;gap:4px;">
+      <button class="tab-btn" id="tab-btn-educational" onclick="switchTab('educational')">Educational</button>
+      <button class="tab-btn active" id="tab-btn-leisure" onclick="switchTab('leisure')">Leisure</button>
+    </div>
+  </div>
+  <div style="border-bottom:1px solid var(--border);margin-bottom:16px;"></div>
+  <div id="tab-leisure">
     <div class="section-header" style="justify-content:flex-end;">
       <select class="age-select" id="age-select" onchange="renderVideos()">
         <option value="teenplus">Teen+ (16+)</option>
@@ -309,9 +312,9 @@ Hidden by default. Never shown to anonymous/email-only users.             */
     </div>
   </div>
   <div id="tab-educational" style="display:none;">
-  <div class="edu-controls" style="justify-content:flex-end;">
-  <select class="edu-select" id="grade-select" onchange="updateSubjectOptions();renderEducationalVideos();">
-      <option value="9">Grade 9</option>
+    <div class="edu-controls" style="justify-content:flex-end;">
+      <select class="edu-select" id="grade-select" onchange="updateSubjectOptions();renderEducationalVideos();">
+        <option value="9">Grade 9</option>
         <option value="10">Grade 10</option>
         <option value="11">Grade 11</option>
         <option value="12">Grade 12</option>
