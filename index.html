@@ -1538,10 +1538,17 @@ loadVideos();
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js');});}
 
 
-  function showInstallPopupIfNeeded(){
+  var installPopupShown = false;
+
+function showInstallPopupIfNeeded(){
+  if(installPopupShown) return;
   var isStandalone=window.navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
-  if(!isStandalone){document.getElementById('install-popup').style.display='flex';}
+  if(!isStandalone){
+    installPopupShown = true;
+    document.getElementById('install-popup').style.display='flex';
+  }
 }
+
 
 </script>
 
