@@ -425,9 +425,6 @@ Hidden by default. Never shown to anonymous/email-only users.             */
       <span class="welcome-field-label">Your email</span>
       <input class="welcome-input" id="welcome-email" type="email" inputmode="email" placeholder="your@email.com"/>
 
-      <span class="welcome-field-label">Invite code (optional)</span>
-      <input class="welcome-invite-input" id="welcome-invite-code" type="text" placeholder="E.g. ET1234"/>
-
       <button class="btn-continue" onclick="welcomeContinueWithEmail()">Send me a sign-in link</button>
 
       <button class="btn-google" onclick="welcomeSignInWithGoogle()">
@@ -665,9 +662,6 @@ function welcomeSignInWithGoogle(){
   errEl.textContent='';
   // Save email for use after Google auth completes
   localStorage.setItem('et_welcome_email',email);
-  // Store invite code if present
-  var code=document.getElementById('welcome-invite-code').value.trim().toUpperCase();
-  if(code)localStorage.setItem('et_pending_code',code);
   // Launch Google auth — onAuthStateChanged handles the rest
   auth.signInWithPopup(provider).catch(function(e){
     if(e.code==='auth/popup-blocked'){alert('Pop-up was blocked. Please allow pop-ups and try again.');}
