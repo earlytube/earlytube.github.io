@@ -971,6 +971,31 @@ function saveUserTier(user,tier,callback){
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   },{merge:true}).then(function(){if(callback)callback();}).catch(function(){if(callback)callback();});
 }
+  /* GET TOKEN TO LOAD VIDEOS */
+function tryGetTokenSilently(user){
+  var silentProvider=new firebase.auth.GoogleAuthProvider();
+  silentProvider.addScope('https://www.googleapis.com/auth/drive.file');
+  silentProvider.addScope('https://www.googleapis.com/auth/spreadsheets');
+  silentProvider.setCustomParameters({prompt:'none'});
+  auth.signInWithPopup(silentProvider).then(function(result){
+    if(result&&result.credential&&result.credential.accessToken){
+      var token=result.credential.accessToken;
+      localStorage.setItem('et_gtoken',token);
+      setupUserProfile(user,token);
+    }
+  }).catch(function(){
+    showReconnectBanner();
+  });
+}
+
+function showReconnectBanner(){
+  var card=document.getElementById('no-videos-card');
+  if(card){
+    card.style.display='block';
+    var empty=card.querySelector('.empty-state');
+    if(empty)empty.innerHTML='<a href="#" onclick="recoverWithFreshToken(currentUser);return false;" style="color:var(--red);font-weight:600;">Tap to reconnect and load your videos</a>';
+  }
+}
 
 /* ── LOAD USER PROFILE ──────────────────────────────────────────────────── */
 function loadUserProfile(user){
@@ -985,7 +1010,7 @@ function loadUserProfile(user){
   userSheetUrl=data.sheetUrl;
   var token=localStorage.getItem('et_gtoken');
   if(token){setupUserProfile(user,token);}
-  else{showNoVideosState(userSheetUrl);}
+        else{tryGetTokenSilently(user);}
 } else {
   showNoVideosState(null);
 }
