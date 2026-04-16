@@ -781,11 +781,12 @@ if(!codes[code]){
 function submitBetaWaitlist(){
   var email=document.getElementById('beta-waitlist-email').value.trim();
   if(!email){alert('Please enter your email.');return;}
-  db.collection('waitlist').add({
-    email:email,
-    source:'beta-strip',
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(){
+ db.collection('waitlist').add({
+  email:email,
+  source:'beta-strip',
+  consented:true,
+  createdAt:firebase.firestore.FieldValue.serverTimestamp()
+}).then(function(){
     document.getElementById('beta-waitlist-section').style.display='none';
     document.getElementById('beta-waitlist-confirmed-section').style.display='block';
     setTimeout(function(){closeBetaModal();},2000);
