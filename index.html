@@ -642,21 +642,13 @@ function onConfigLoaded(){
 
 // Validates email field, then triggers Google auth
 function welcomeSignInWithGoogle(){
-  var email=document.getElementById('welcome-email').value.trim();
-  var errEl=document.getElementById('welcome-error');
-  if(!email||!email.includes('@')){
-    errEl.textContent='Please enter a valid email address.';
-    return;
-  }
-  errEl.textContent='';
-  // Save email for use after Google auth completes
-  localStorage.setItem('et_welcome_email',email);
-  // Launch Google auth — onAuthStateChanged handles the rest
+  document.getElementById('welcome-error').textContent='';
   auth.signInWithPopup(provider).catch(function(e){
     if(e.code==='auth/popup-blocked'){alert('Pop-up was blocked. Please allow pop-ups and try again.');}
     else if(e.code!=='auth/cancelled-popup-request'&&e.code!=='auth/popup-closed-by-user'){alert('Sign in failed. Please try again.');}
   });
 }
+
 
 function welcomeContinueWithEmail(){
   var email=document.getElementById('welcome-email').value.trim();
