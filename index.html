@@ -734,23 +734,25 @@ function validateBetaCode(){
     var usageCount=data.betaUsageCount||0;
     var limit=data.betaLimit||99;
 
-    if(!codes[code]){
-      // Invalid code
-      btn.textContent='Unlock';btn.disabled=false;
-      document.getElementById('beta-code-input').style.borderColor='var(--red)';
-      setTimeout(function(){
-        document.getElementById('beta-code-input').style.borderColor='';
-        // Slide to waitlist
-        document.getElementById('beta-code-section').style.display='none';
-        document.getElementById('beta-waitlist-section').style.display='block';
-      },600);
-      return;
-    }
+if(!codes[code]){
+  btn.textContent='Unlock';btn.disabled=false;
+  document.getElementById('beta-code-input').style.borderColor='var(--red)';
+  setTimeout(function(){
+    document.getElementById('beta-code-input').style.borderColor='';
+    document.getElementById('beta-code-section').style.display='none';
+    var knownEmail=currentUser?currentUser.email:localStorage.getItem('et_email');
+    if(knownEmail)document.getElementById('beta-waitlist-email').value=knownEmail;
+    document.getElementById('beta-waitlist-section').style.display='block';
+  },600);
+  return;
+}
 
     if(usageCount>=limit){
       // Valid code but limit reached — waitlist
-      document.getElementById('beta-code-section').style.display='none';
-      document.getElementById('beta-waitlist-section').style.display='block';
+     document.getElementById('beta-code-section').style.display='none';
+     var knownEmail=currentUser?currentUser.email:localStorage.getItem('et_email');
+     if(knownEmail)document.getElementById('beta-waitlist-email').value=knownEmail;
+     document.getElementById('beta-waitlist-section').style.display='block';
       btn.textContent='Unlock';btn.disabled=false;
       return;
     }
