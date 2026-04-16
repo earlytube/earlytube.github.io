@@ -689,7 +689,7 @@ function welcomeContinueWithEmail(){
    Beta strip: shown when betaFeaturesEnabled + signed in + not beta tier.
    Add Video buttons: shown when betaFeaturesEnabled + beta tier.            */
 function updateBetaUI(){
-  var isBeta=userTier==='beta';
+  var isBeta = userTier === 'beta' || userTier === 'gamma';
   var showStrip=appConfig.betaFeaturesEnabled&&currentUser&&!isBeta;
   var showAdd=appConfig.betaFeaturesEnabled&&isBeta;
 
