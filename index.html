@@ -602,6 +602,16 @@ function loadAppConfig(){
   db.collection('config').doc('app').get().then(function(doc){
     if(doc.exists){
       var d=doc.data();
+      if(d.maintenanceMode===true){
+        fetch('maintenance.html')
+          .then(function(r){return r.text();})
+          .then(function(html){
+            document.open();
+            document.write(html);
+            document.close();
+          });
+        return;
+      }
       appConfig.signinEnabled=d.signinEnabled===true;
       appConfig.inviteCodeEnabled=d.inviteCodeEnabled===true;
       appConfig.betaFeaturesEnabled=d.betaFeaturesEnabled===true;
