@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<title>EarlyTube — Parent Mode</title>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<link rel="icon" type="image/png" href="icon.png"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+
+:root{
+–bg:#F1F5F9;
+–card:#FFFFFF;
+–card2:#F8FAFC;
+–border:#E2E8F0;
+–text:#0F172A;
+–text-2:#334155;
+–text-3:#64748B;
+–green:#10B981;
+–green-dim:#D1FAE5;
+–green-text:#065F46;
+–red:#EF4444;
+–red-dim:#FEE2E2;
+–radius:14px;
+–shadow:0 1px 4px rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.06);
+}
+
+body{background:var(–bg);color:var(–text);font-family:‘Inter’,-apple-system,sans-serif;min-height:100vh;padding-bottom:40px;}
+
+/* ── PIN SCREEN ── */
+#pin-screen{
+display:flex;position:fixed;inset:0;
+background:#0F172A;z-index:100;
+flex-direction:column;align-items:center;justify-content:center;gap:18px;
+}
+.pin-icon{width:52px;height:52px;background:#1E293B;border-radius:14px;display:flex;align-items:center;justify-content:center;margin-bottom:4px;}
+.pin-icon svg{width:22px;height:22px;fill:#94A3B8;}
+#pin-screen h2{font-size:18px;font-weight:600;color:white;}
+#pin-screen p{font-size:13px;color:#94A3B8;margin-top:-8px;}
+.pin-dots{display:flex;gap:12px;margin:4px 0;}
+.dot{width:14px;height:14px;border-radius:50%;background:#1E293B;transition:background 0.12s,transform 0.12s;}
+.dot.filled{background:#10B981;transform:scale(1.1);}
+.pin-error{font-size:12.5px;color:#F87171;height:16px;}
+.pin-grid{display:grid;grid-template-columns:repeat(3,72px);gap:10px;}
+.pin-btn{height:72px;border-radius:12px;background:#1E293B;border:1px solid #334155;color:white;font-size:22px;font-weight:500;font-family:inherit;cursor:pointer;}
+.pin-btn:active{background:#334155;}
+.pin-hint{font-size:11px;color:#4B5563;margin-top:4px;}
+.btn-cancel-pin{font-size:13px;color:#94A3B8;background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;margin-top:4px;}
+
+/* ── MAIN CONTENT (hidden until PIN) ── */
+#parent-content{display:none;flex-direction:column;min-height:100vh;}
+
+/* ── TOP NAV ── */
+.top-nav{
+display:flex;align-items:center;justify-content:space-between;
+padding:16px 20px;
+border-bottom:1px solid var(–border);
+background:var(–card);
+position:sticky;top:0;z-index:10;
+box-shadow:0 1px 0 var(–border);
+}
+.nav-left{display:flex;align-items:center;gap:10px;}
+.nav-left img{width:40px;height:40px;border-radius:12px;}
+.nav-title{font-size:17px;font-weight:700;letter-spacing:-0.3px;color:var(–text);}
+.nav-sub{font-size:11px;color:var(–text-3);margin-top:1px;font-family:‘Lora’,serif;font-style:italic;}
+.btn-done{padding:8px 20px;border-radius:20px;background:var(–green);color:white;border:none;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;}
+
+/* ── PARENT BADGE ── */
+.parent-badge{
+background:var(–green-dim);
+border-bottom:1px solid #A7F3D0;
+padding:10px 20px;
+display:flex;align-items:center;gap:8px;
+font-size:12px;font-weight:600;color:var(–green-text);
+}
+
+/* ── CONTENT ── */
+.content{padding:16px;display:flex;flex-direction:column;gap:12px;max-width:560px;margin:0 auto;width:100%;}
+
+/* ── SECTION LABEL ── */
+.section-label{font-size:11px;font-weight:700;color:var(–text-3);text-transform:uppercase;letter-spacing:0.8px;padding:4px 0 6px;}
+
+/* ── SETTINGS CARDS ── */
+.settings-card{background:var(–card);border:1px solid var(–border);border-radius:var(–radius);overflow:hidden;box-shadow:var(–shadow);}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;border-bottom:1px solid var(–border);cursor:pointer;}
+.setting-row:last-child{border-bottom:none;}
+.setting-row:active{background:var(–card2);}
+.setting-left{flex:1;}
+.setting-name{font-size:14px;font-weight:600;color:var(–text);}
+.setting-desc{font-size:12px;color:var(–text-3);margin-top:2px;line-height:1.4;}
+.setting-right{display:flex;align-items:center;gap:8px;flex-shrink:0;margin-left:12px;}
+.chevron{color:var(–text-3);font-size:18px;}
+.badge-beta{font-size:10px;font-weight:700;color:var(–green-text);background:var(–green-dim);padding:2px 7px;border-radius:20px;border:1px solid #A7F3D0;}
+
+/* ── TOGGLE ── */
+.toggle{position:relative;width:44px;height:26px;flex-shrink:0;}
+.toggle input{opacity:0;width:0;height:0;position:absolute;}
+.slider{position:absolute;inset:0;background:#CBD5E1;border-radius:26px;cursor:pointer;transition:0.2s;}
+.slider:before{content:’’;position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:white;border-radius:50%;transition:0.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2);}
+input:checked+.slider{background:var(–green);}
+input:checked+.slider:before{transform:translateX(18px);}
+
+/* ── PIN DOTS DISPLAY ── */
+.pin-display{display:flex;gap:6px;align-items:center;}
+.pin-display-dot{width:8px;height:8px;border-radius:50%;background:var(–border);}
+.pin-display-dot.filled{background:var(–text-3);}
+
+/* ── CHANGE PIN MODAL ── */
+#change-pin-modal{
+display:none;position:fixed;inset:0;
+background:#0F172A;z-index:200;
+flex-direction:column;align-items:center;justify-content:center;gap:18px;
+}
+.modal-pin-title{font-size:16px;font-weight:600;color:white;text-align:center;}
+.modal-pin-sub{font-size:13px;color:#94A3B8;margin-top:-8px;text-align:center;}
+.modal-pin-step{font-size:11px;color:#22C55E;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;}
+.btn-pin-cancel{font-size:13px;color:#94A3B8;background:none;border:none;cursor:pointer;font-family:inherit;text-decoration:underline;}
+
+/* ── ACCOUNT ── */
+.account-row{display:flex;align-items:center;gap:12px;padding:15px 16px;border-bottom:1px solid var(–border);}
+.account-avatar{width:36px;height:36px;border-radius:50%;background:var(–green-dim);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(–green-text);flex-shrink:0;overflow:hidden;}
+.account-avatar img{width:100%;height:100%;object-fit:cover;}
+.account-name{font-size:14px;font-weight:600;color:var(–text);}
+.account-email{font-size:12px;color:var(–text-3);margin-top:1px;}
+
+/* ── DANGER ── */
+.danger-row{display:flex;align-items:center;justify-content:space-between;padding:15px 16px;cursor:pointer;}
+.danger-row:active{background:var(–red-dim);}
+.danger-name{font-size:14px;font-weight:600;color:var(–red);}
+.danger-desc{font-size:12px;color:var(–text-3);margin-top:2px;}
+
+/* ── BACK BUTTON ── */
+.btn-back-full{width:100%;padding:14px;border-radius:var(–radius);background:var(–card);color:var(–text-2);border:1px solid var(–border);font-size:15px;font-family:inherit;cursor:pointer;font-weight:500;box-shadow:var(–shadow);}
+.btn-back-full:active{background:var(–card2);}
+
+.version{text-align:center;font-size:11px;color:var(–text-3);padding:8px 0;}
+
+.success-msg{font-size:12px;color:var(–green);margin-top:4px;min-height:16px;}
+</style>
+
+</head>
+<body>
+
+<!-- ── PIN SCREEN ── -->
+
+<div id="pin-screen">
+  <div class="pin-icon"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg></div>
+  <h2>Parent Mode</h2>
+  <p>Enter your PIN to continue</p>
+  <div class="pin-dots">
+    <div class="dot" id="d0"></div>
+    <div class="dot" id="d1"></div>
+    <div class="dot" id="d2"></div>
+    <div class="dot" id="d3"></div>
+  </div>
+  <div class="pin-error" id="pin-error"></div>
+  <div class="pin-grid">
+    <button class="pin-btn" onclick="pinPress('1')">1</button>
+    <button class="pin-btn" onclick="pinPress('2')">2</button>
+    <button class="pin-btn" onclick="pinPress('3')">3</button>
+    <button class="pin-btn" onclick="pinPress('4')">4</button>
+    <button class="pin-btn" onclick="pinPress('5')">5</button>
+    <button class="pin-btn" onclick="pinPress('6')">6</button>
+    <button class="pin-btn" onclick="pinPress('7')">7</button>
+    <button class="pin-btn" onclick="pinPress('8')">8</button>
+    <button class="pin-btn" onclick="pinPress('9')">9</button>
+    <button class="pin-btn" onclick="pinClear()" style="font-size:18px;color:#94A3B8;">&#9003;</button>
+    <button class="pin-btn" onclick="pinPress('0')">0</button>
+    <button class="pin-btn" onclick="goBack()" style="font-size:11px;color:#94A3B8;">Cancel</button>
+  </div>
+  <div class="pin-hint">Default PIN is 1234 · Change in Parent Mode</div>
+</div>
+
+<!-- ── CHANGE PIN MODAL ── -->
+
+<div id="change-pin-modal">
+  <div class="pin-icon"><svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/></svg></div>
+  <div class="modal-pin-step" id="change-pin-step">Step 1 of 2</div>
+  <div class="modal-pin-title" id="change-pin-title">Enter new PIN</div>
+  <div class="modal-pin-sub" id="change-pin-sub">Choose a 4-digit PIN</div>
+  <div class="pin-dots">
+    <div class="dot" id="cd0"></div>
+    <div class="dot" id="cd1"></div>
+    <div class="dot" id="cd2"></div>
+    <div class="dot" id="cd3"></div>
+  </div>
+  <div class="pin-error" id="change-pin-error"></div>
+  <div class="pin-grid">
+    <button class="pin-btn" onclick="changePinPress('1')">1</button>
+    <button class="pin-btn" onclick="changePinPress('2')">2</button>
+    <button class="pin-btn" onclick="changePinPress('3')">3</button>
+    <button class="pin-btn" onclick="changePinPress('4')">4</button>
+    <button class="pin-btn" onclick="changePinPress('5')">5</button>
+    <button class="pin-btn" onclick="changePinPress('6')">6</button>
+    <button class="pin-btn" onclick="changePinPress('7')">7</button>
+    <button class="pin-btn" onclick="changePinPress('8')">8</button>
+    <button class="pin-btn" onclick="changePinPress('9')">9</button>
+    <button class="pin-btn" onclick="changePinClear()" style="font-size:18px;color:#94A3B8;">&#9003;</button>
+    <button class="pin-btn" onclick="changePinPress('0')">0</button>
+    <button class="pin-btn" onclick="closeChangePinModal()" style="font-size:11px;color:#94A3B8;">Cancel</button>
+  </div>
+</div>
+
+<!-- ── PARENT CONTENT ── -->
+
+<div id="parent-content">
+
+  <nav class="top-nav">
+    <div class="nav-left">
+      <img src="icon.png" alt="EarlyTube" onerror="this.style.background='#10B981';"/>
+      <div>
+        <div class="nav-title">Parent Mode</div>
+        <div class="nav-sub">I hope they never know.</div>
+      </div>
+    </div>
+    <button class="btn-done" onclick="goBack()">Done</button>
+  </nav>
+
+  <div class="parent-badge">
+    🔒 You're in Parent Mode — your child can't see this
+  </div>
+
+  <div class="content">
+
+```
+<!-- PARENTAL CONTROLS -->
+<div class="section-label">Parental Controls</div>
+<div class="settings-card">
+  <div class="setting-row" onclick="showChangePinModal()">
+    <div class="setting-left">
+      <div class="setting-name">Parent PIN</div>
+      <div class="setting-desc">Required to open Parent Mode and exit videos</div>
+    </div>
+    <div class="setting-right">
+      <div class="pin-display">
+        <div class="pin-display-dot filled"></div>
+        <div class="pin-display-dot filled"></div>
+        <div class="pin-display-dot filled"></div>
+        <div class="pin-display-dot filled"></div>
+      </div>
+      <span class="chevron">›</span>
+    </div>
+  </div>
+  <div class="setting-row" style="cursor:default;">
+    <div class="setting-left">
+      <div class="setting-name">Hide age selector</div>
+      <div class="setting-desc">Removes the age group dropdown from the home screen</div>
+    </div>
+    <div class="setting-right">
+      <label class="toggle" onclick="event.stopPropagation();">
+        <input type="checkbox" id="hide-age-toggle" onchange="saveHideAge()"/>
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+</div>
+
+<!-- MY VIDEOS — beta only -->
+<div id="my-videos-section" style="display:none;">
+  <div class="section-label">My Videos</div>
+  <div class="settings-card">
+    <div class="setting-row" onclick="openSheets()">
+      <div class="setting-left">
+        <div class="setting-name">Manage in Google Sheets</div>
+        <div class="setting-desc">Add, edit or remove videos from your list</div>
+      </div>
+      <div class="setting-right">
+        <span class="badge-beta">Beta</span>
+        <span class="chevron">›</span>
+      </div>
+    </div>
+    <div class="setting-row" onclick="disconnectDrive()">
+      <div class="setting-left">
+        <div class="setting-name">Disconnect Google Drive</div>
+        <div class="setting-desc">Unlink your video list from this account</div>
+      </div>
+      <div class="setting-right">
+        <span class="badge-beta">Beta</span>
+        <span class="chevron">›</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACCOUNT -->
+<div class="section-label">Account</div>
+<div class="settings-card">
+  <div class="account-row">
+    <div class="auth-avatar account-avatar" id="parent-avatar"></div>
+    <div>
+      <div class="account-name" id="parent-name"></div>
+      <div class="account-email" id="parent-email"></div>
+    </div>
+  </div>
+  <div class="danger-row" onclick="signOut()">
+    <div>
+      <div class="danger-name">Sign out</div>
+      <div class="danger-desc">You'll need to sign in again next visit</div>
+    </div>
+    <span class="chevron" style="color:#EF4444;">›</span>
+  </div>
+</div>
+
+<button class="btn-back-full" onclick="goBack()">← Back to EarlyTube</button>
+<div class="version" id="version-label">EarlyTube</div>
+```
+
+  </div>
+</div>
+
+<script>
+var firebaseConfig={
+  apiKey:'AIzaSyAwMKzuEiBXJdLpFJRCBcStypx7rEvZkJk',
+  authDomain:'earlytube.firebaseapp.com',
+  projectId:'earlytube',
+  storageBucket:'earlytube.firebasestorage.app',
+  messagingSenderId:'888437662959',
+  appId:'1:888437662959:web:538344569d8a4f092d671a'
+};
+firebase.initializeApp(firebaseConfig);
+var auth=firebase.auth();
+var db=firebase.firestore();
+
+var currentUser=null;
+var parentPin=localStorage.getItem('et_pin')||'1234';
+var userTier=localStorage.getItem('et_tier')||'general';
+var pinBuffer='';
+var changePinBuffer='';
+var changePinNewPin='';
+var changePinStep=1;
+
+/* ── AUTH ── */
+auth.onAuthStateChanged(function(user){
+  if(!user){
+    window.location.href='index.html';
+    return;
+  }
+  currentUser=user;
+  loadParentMode(user);
+});
+
+function loadParentMode(user){
+  // Load tier from Firestore
+  db.collection('users').doc(user.uid).get().then(function(doc){
+    if(doc.exists){
+      var data=doc.data();
+      if(data.pin){parentPin=data.pin;localStorage.setItem('et_pin',data.pin);}
+      userTier=data.tier||'general';
+      localStorage.setItem('et_tier',userTier);
+    }
+  }).catch(function(){});
+}
+
+/* ── PIN ENTRY ── */
+function pinPress(d){
+  if(pinBuffer.length>=4)return;
+  pinBuffer+=d;
+  updateDots();
+  if(pinBuffer.length===4)setTimeout(checkPin,120);
+}
+
+function pinClear(){
+  pinBuffer=pinBuffer.slice(0,-1);
+  updateDots();
+}
+
+function updateDots(){
+  for(var i=0;i<4;i++){
+    document.getElementById('d'+i).className='dot'+(i<pinBuffer.length?' filled':'');
+  }
+}
+
+function checkPin(){
+  if(pinBuffer===parentPin){
+    document.getElementById('pin-screen').style.display='none';
+    document.getElementById('parent-content').style.display='flex';
+    renderParentMode();
+  } else {
+    document.getElementById('pin-error').textContent='Incorrect PIN — try again';
+    pinBuffer='';
+    updateDots();
+  }
+}
+
+/* ── RENDER PARENT MODE ── */
+function renderParentMode(){
+  var user=currentUser;
+
+  // Avatar
+  var av=document.getElementById('parent-avatar');
+  if(user.photoURL){
+    av.innerHTML='<img src="'+user.photoURL+'" alt=""/>';
+  } else {
+    var initials=user.displayName?user.displayName.substring(0,2).toUpperCase():'U';
+    av.textContent=initials;
+  }
+
+  // Name + email
+  document.getElementById('parent-name').textContent=user.displayName||'Parent';
+  document.getElementById('parent-email').textContent=user.email||'';
+
+  // Hide age toggle
+  var hideAge=localStorage.getItem('et_hide_age')==='true';
+  document.getElementById('hide-age-toggle').checked=hideAge;
+
+  // Beta section
+  var isBeta=userTier==='beta'||userTier==='alpha'||userTier==='gamma';
+  document.getElementById('my-videos-section').style.display=isBeta?'block':'none';
+
+  // Sheet URL
+  db.collection('users').doc(user.uid).get().then(function(doc){
+    if(doc.exists&&doc.data().sheetUrl){
+      localStorage.setItem('et_sheet_url',doc.data().sheetUrl);
+    }
+  }).catch(function(){});
+}
+
+/* ── HIDE AGE SELECTOR ── */
+function saveHideAge(){
+  var val=document.getElementById('hide-age-toggle').checked;
+  localStorage.setItem('et_hide_age',val?'true':'false');
+  if(currentUser){
+    db.collection('users').doc(currentUser.uid).set({hideAge:val},{merge:true}).catch(function(){});
+  }
+}
+
+/* ── CHANGE PIN ── */
+function showChangePinModal(){
+  changePinBuffer='';
+  changePinNewPin='';
+  changePinStep=1;
+  updateChangePinDots();
+  document.getElementById('change-pin-step').textContent='Step 1 of 2';
+  document.getElementById('change-pin-title').textContent='Enter new PIN';
+  document.getElementById('change-pin-sub').textContent='Choose a 4-digit PIN';
+  document.getElementById('change-pin-error').textContent='';
+  document.getElementById('change-pin-modal').style.display='flex';
+}
+
+function closeChangePinModal(){
+  document.getElementById('change-pin-modal').style.display='none';
+  changePinBuffer='';changePinNewPin='';changePinStep=1;
+}
+
+function changePinPress(d){
+  if(changePinBuffer.length>=4)return;
+  changePinBuffer+=d;
+  updateChangePinDots();
+  if(changePinBuffer.length===4)setTimeout(processChangePinStep,120);
+}
+
+function changePinClear(){
+  changePinBuffer=changePinBuffer.slice(0,-1);
+  updateChangePinDots();
+}
+
+function updateChangePinDots(){
+  for(var i=0;i<4;i++){
+    document.getElementById('cd'+i).className='dot'+(i<changePinBuffer.length?' filled':'');
+  }
+}
+
+function processChangePinStep(){
+  if(changePinStep===1){
+    changePinNewPin=changePinBuffer;
+    changePinBuffer='';
+    changePinStep=2;
+    updateChangePinDots();
+    document.getElementById('change-pin-step').textContent='Step 2 of 2';
+    document.getElementById('change-pin-title').textContent='Confirm new PIN';
+    document.getElementById('change-pin-sub').textContent='Enter the same PIN again';
+    document.getElementById('change-pin-error').textContent='';
+  } else {
+    if(changePinBuffer===changePinNewPin){
+      // Save PIN
+      parentPin=changePinNewPin;
+      localStorage.setItem('et_pin',parentPin);
+      if(currentUser){
+        db.collection('users').doc(currentUser.uid).set({pin:parentPin},{merge:true}).catch(function(){});
+      }
+      closeChangePinModal();
+      alert('PIN updated successfully.');
+    } else {
+      document.getElementById('change-pin-error').textContent='PINs don\'t match — try again';
+      changePinBuffer='';
+      changePinStep=1;
+      changePinNewPin='';
+      updateChangePinDots();
+      document.getElementById('change-pin-step').textContent='Step 1 of 2';
+      document.getElementById('change-pin-title').textContent='Enter new PIN';
+      document.getElementById('change-pin-sub').textContent='Choose a 4-digit PIN';
+    }
+  }
+}
+
+/* ── SHEETS ── */
+function openSheets(){
+  var url=localStorage.getItem('et_sheet_url');
+  if(url){window.open(url,'_blank');}
+  else{alert('No video list found. Add videos from the main screen first.');}
+}
+
+/* ── DISCONNECT DRIVE ── */
+function disconnectDrive(){
+  if(!confirm('Disconnect Google Drive? Your videos will still be in your Google Drive but won\'t load in EarlyTube until you reconnect.'))return;
+  localStorage.removeItem('et_gtoken');
+  if(currentUser){
+    db.collection('users').doc(currentUser.uid).update({
+      sheetId:firebase.firestore.FieldValue.delete(),
+      sheetUrl:firebase.firestore.FieldValue.delete()
+    }).catch(function(){});
+  }
+  alert('Google Drive disconnected.');
+}
+
+/* ── SIGN OUT ── */
+function signOut(){
+  if(!confirm('Sign out of EarlyTube?'))return;
+  auth.signOut().then(function(){
+    localStorage.removeItem('et_gtoken');
+    localStorage.removeItem('et_tier');
+    localStorage.removeItem('et_email');
+    window.location.href='index.html';
+  });
+}
+
+/* ── BACK ── */
+function goBack(){
+  window.location.href='index.html';
+}
+</script>
+
+</body>
+</html>
