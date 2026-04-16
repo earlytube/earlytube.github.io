@@ -15,9 +15,9 @@
   --border:     #334155;
 
   /* Text */
-  --text:       #F8FAFC;   /* Clean Off-White    */
-  --text-2:     #CBD5E1;
-  --text-3:     #94A3B8;
+   --text:       #F8FAFC;
+   --text-2:     #E2E8F0;
+   --text-3:     #CBD5E1;
 
   /* Accent — Soft Gold (tagline, highlights) */
   --accent:     #F59E0B;
