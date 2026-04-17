@@ -1114,10 +1114,7 @@ function showNoVideosState(sheetUrl){
   document.getElementById('no-videos-card').style.display=(currentUser&&isBeta)?'block':'none';
   document.getElementById('suggested-card').style.display='block';
   document.getElementById('paste-card').style.display='block';
-  if(sheetUrl){
-    document.getElementById('sheet-link').href=sheetUrl;
-    document.getElementById('sheet-link-2').href=sheetUrl;
-  }
+  
   updateBetaUI();
 }
 function createFreshSetup(token,user){
@@ -1221,7 +1218,6 @@ if(!hasVideos){showNoVideosState(userSheetUrl);return;}
 personalVideosData=freshData;
       document.getElementById('no-videos-card').style.display='none';
       document.getElementById('personal-card').style.display='block';
-      document.getElementById('sheet-link').href=userSheetUrl||'#';
       var cats=Object.keys(personalVideosData);
       var sel=document.getElementById('category-select');
       var prev=sel.value;sel.innerHTML='';
