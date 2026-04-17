@@ -686,9 +686,10 @@ function welcomeContinueWithEmail(){
   btn.textContent='Sending...';btn.disabled=true;
   auth.sendSignInLinkToEmail(email,actionCodeSettings).then(function(){
     localStorage.setItem('et_email_for_signin',email);
-    errEl.style.color='#22C55E';
-    errEl.textContent='Login Link sent to '+email+' — check your inbox (and spam). Email will be from noreply@earlytube.firebaseapp.com';
-    btn.textContent='Resend';btn.disabled=false;
+  errEl.textContent='';
+btn.textContent='Resend';btn.disabled=false;
+document.getElementById('email-sent-address').textContent=email;
+document.getElementById('email-sent-modal').style.display='flex';  
   }).catch(function(e){
     btn.textContent='Send me a sign-in link';btn.disabled=false;
     errEl.textContent='Could not send link. Please try again.';
@@ -1620,6 +1621,15 @@ function showInstallPopupIfNeeded(){
   style="width:100%;padding:12px;border-radius:10px;background:none;border:1px solid var(--border);color:var(--text-3);font-size:13px;font-family:inherit;cursor:pointer;">
   Don't remind me again
 </button>
+  </div>
+</div>
+<div id="email-sent-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.87);z-index:500;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:20px;padding:32px 24px;width:100%;max-width:400px;text-align:center;">
+    <div style="font-size:40px;margin-bottom:16px;">📬</div>
+    <div style="font-size:17px;font-weight:700;margin-bottom:8px;color:var(--text);">Check your inbox</div>
+    <div style="font-size:13px;color:var(--text-2);line-height:1.75;margin-bottom:6px;">We sent a sign-in link to<br><strong id="email-sent-address" style="color:var(--text);"></strong></div>
+    <div style="font-size:12px;color:var(--text-3);margin-bottom:24px;">Check spam too. Email comes from<br>noreply@earlytube.firebaseapp.com</div>
+    <button onclick="document.getElementById('email-sent-modal').style.display='none';" style="width:100%;padding:14px;border-radius:10px;background:var(--red);color:white;border:none;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;">Got it</button>
   </div>
 </div>
 
