@@ -623,6 +623,27 @@ function loadAppConfig(){
     onConfigLoaded();
   });
 }
+function loadCachedVideos(user){
+  var cached = localStorage.getItem('et_videos_'+user.uid);
+  if(!cached) return false;
+  try {
+    personalVideosData = JSON.parse(cached);
+    if(!Object.keys(personalVideosData).length) return false;
+    // Render immediately
+    var cats = Object.keys(personalVideosData);
+    var sel = document.getElementById('category-select');
+    sel.innerHTML = '';
+    cats.forEach(function(cat){
+      var opt = document.createElement('option');
+      opt.value = cat; opt.textContent = cat+' ('+personalVideosData[cat].length+')';
+      sel.appendChild(opt);
+    });
+    document.getElementById('personal-card').style.display = 'block';
+    document.getElementById('no-videos-card').style.display = 'none';
+    renderPersonalCategory();
+    return true;
+  } catch(e){ return false; }
+}
 
 /* ── ON CONFIG LOADED ────────────────────────────────────────────────────────
    Called after config is read. Decides whether to show welcome modal.
@@ -638,6 +659,7 @@ function onConfigLoaded(){
     document.getElementById('welcome-modal').style.display='flex';
   },{onlyOnce:true});
 }
+
 /* ── WELCOME MODAL ACTIONS ───────────────────────────────────────────────── */
 
 // Validates email field, then triggers Google auth
@@ -890,10 +912,11 @@ function updateAuthUI(user){
 auth.onAuthStateChanged(function(user){
   if(user){
     currentUser=user;
+    loadCachedVideos(user);
     // Close welcome modal if open
     document.getElementById('welcome-modal').style.display='none';
     updateAuthUI(user);
-    showInstallPopupIfNeeded(); // ← add this
+    showInstallPopupIfNeeded(); 
     startInactivityWatch();
 
     auth.getRedirectResult().then(function(result){
@@ -999,7 +1022,8 @@ function loadUserProfile(user){
       if(data.sheetId){
   userSheetUrl=data.sheetUrl;
   var token=localStorage.getItem('et_gtoken');
-  if(token){setupUserProfile(user,token);}
+    if(token){setupUserProfile(user,token,data);}
+
         else{tryGetTokenSilently(user);}
 } else {
   showNoVideosState(null);
@@ -1040,32 +1064,22 @@ function recoverWithFreshToken(user){
   });
 }
 
-
-function setupUserProfile(user,token){
-  db.collection('users').doc(user.uid).get().then(function(doc){
-    if(doc.exists&&doc.data().sheetId){
-      fetch('https://sheets.googleapis.com/v4/spreadsheets/'+doc.data().sheetId+'/values/Videos!A1',{
-        headers:{'Authorization':'Bearer '+token}
-      }).then(function(r){return r.json();})
-      .then(function(data){
-        if(data.error){
-          if(data.error.code===401){refreshTokenAndRetry(function(t){setupUserProfile(user,t);});}
-          else if(data.error.code===404){
-            db.collection('users').doc(user.uid).update({
-              sheetId:firebase.firestore.FieldValue.delete(),
-              sheetUrl:firebase.firestore.FieldValue.delete()
-            }).then(function(){createAndSaveSheet(user,token);});
-          } else {userSheetUrl=doc.data().sheetUrl;showNoVideosState(userSheetUrl);}
-        } else {
-          userSheetUrl=doc.data().sheetUrl;
-          loadPersonalVideos(doc.data().sheetId,token);
-        }
-      }).catch(function(){userSheetUrl=doc.data().sheetUrl;showNoVideosState(userSheetUrl);});
-    } else {
-      createAndSaveSheet(user,token);
-    }
-  });
+function setupUserProfile(user,token,docData){
+  if(docData&&docData.sheetId){
+    userSheetUrl=docData.sheetUrl;
+    loadPersonalVideos(docData.sheetId,token);
+  } else {
+    db.collection('users').doc(user.uid).get().then(function(doc){
+      if(doc.exists&&doc.data().sheetId){
+        userSheetUrl=doc.data().sheetUrl;
+        loadPersonalVideos(doc.data().sheetId,token);
+      } else {
+        createAndSaveSheet(user,token);
+      }
+    });
+  }
 }
+
 
 function createAndSaveSheet(user,token){
   return createFreshSetup(token,user).then(function(sheetData){
@@ -1178,49 +1192,54 @@ function createFreshSetup(token,user){
   });
 }
 
-function loadPersonalVideos(sheetId,token){
-  if(!token)token=localStorage.getItem('et_gtoken');
-  if(!token||!sheetId)return;
-  fetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/Videos!A:F',{
-    headers:{'Authorization':'Bearer '+token}
-  }).then(function(r){return r.json();})
-  .then(function(data){
-    if(data.error){
-      if(data.error.code===401){refreshTokenAndRetry(function(t){loadPersonalVideos(sheetId,t);});return;}
-      showNoVideosState(userSheetUrl);return;
-    }
-    var rows=data.values||[];
-    var hasVideos=false,needsTitleFetch=[];
-    personalVideosData={};
-    for(var i=1;i<rows.length;i++){
-      var row=rows[i];
-      if(!row||!row[2]||!row[2].trim())continue;
-      var id=extractId(row[2].trim())||row[2].trim();
-      if(!id)continue;
-      var title=row[0]||'',cat=row[3]||'My Videos';
-      if(!personalVideosData[cat])personalVideosData[cat]=[];
-      personalVideosData[cat].push({title:title,id:id});
-      hasVideos=true;
-      if(!title)needsTitleFetch.push({sheetRow:i+1,id:id,cat:cat});
-    }
-    if(!hasVideos){showNoVideosState(userSheetUrl);return;}
-    document.getElementById('no-videos-card').style.display='none';
-    document.getElementById('personal-card').style.display='block';
-    document.getElementById('sheet-link').href=userSheetUrl||'#';
-    var cats=Object.keys(personalVideosData);
-    var sel=document.getElementById('category-select');
-    var prev=sel.value;sel.innerHTML='';
-    cats.forEach(function(cat){
-      var opt=document.createElement('option');
-      opt.value=cat;opt.textContent=cat+' ('+personalVideosData[cat].length+')';
-      sel.appendChild(opt);
-    });
-    if(prev&&personalVideosData[prev])sel.value=prev;
-    renderPersonalCategory();
-    updateBetaUI();
-    if(needsTitleFetch.length>0)fetchMissingTitles(sheetId,token,needsTitleFetch);
-  }).catch(function(e){console.error('Load error',e);showNoVideosState(userSheetUrl);});
+  function loadPersonalVideos(sheetId,token){
+    if(!token)token=localStorage.getItem('et_gtoken');
+    if(!token||!sheetId)return;
+    fetch('https://sheets.googleapis.com/v4/spreadsheets/'+sheetId+'/values/Videos!A:F',{
+      headers:{'Authorization':'Bearer '+token}
+    }).then(function(r){return r.json();})
+    .then(function(data){
+      if(data.error){
+        if(data.error.code===401){refreshTokenAndRetry(function(t){loadPersonalVideos(sheetId,t);});return;}
+        showNoVideosState(userSheetUrl);return;
+      }
+      var rows=data.values||[];
+      var hasVideos=false,needsTitleFetch=[];
+      personalVideosData={};
+      for(var i=1;i<rows.length;i++){
+        var row=rows[i];
+        if(!row||!row[2]||!row[2].trim())continue;
+        var id=extractId(row[2].trim())||row[2].trim();
+        if(!id)continue;
+        var title=row[0]||'',cat=row[3]||'My Videos';
+        if(!personalVideosData[cat])personalVideosData[cat]=[];
+        personalVideosData[cat].push({title:title,id:id});
+        hasVideos=true;
+        if(!title)needsTitleFetch.push({sheetRow:i+1,id:id,cat:cat});
+      }
+      if(!hasVideos){showNoVideosState(userSheetUrl);return;}
+      document.getElementById('no-videos-card').style.display='none';
+      document.getElementById('personal-card').style.display='block';
+      document.getElementById('sheet-link').href=userSheetUrl||'#';
+      var cats=Object.keys(personalVideosData);
+      var sel=document.getElementById('category-select');
+      var prev=sel.value;sel.innerHTML='';
+      cats.forEach(function(cat){
+        var opt=document.createElement('option');
+        opt.value=cat;opt.textContent=cat+' ('+personalVideosData[cat].length+')';
+        sel.appendChild(opt);
+      });
+      if(prev&&personalVideosData[prev])sel.value=prev;
+      
+      renderPersonalCategory();
+      // Save to cache
+if(currentUser){
+  localStorage.setItem('et_videos_'+currentUser.uid, JSON.stringify(personalVideosData));
 }
+      updateBetaUI();
+      if(needsTitleFetch.length>0)fetchMissingTitles(sheetId,token,needsTitleFetch);
+    }).catch(function(e){console.error('Load error',e);showNoVideosState(userSheetUrl);});
+  }
 
 function fetchMissingTitles(sheetId,token,items){
   var promises=items.map(function(item){
