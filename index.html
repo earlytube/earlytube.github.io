@@ -689,7 +689,7 @@ function welcomeContinueWithEmail(){
   auth.sendSignInLinkToEmail(email,actionCodeSettings).then(function(){
     localStorage.setItem('et_email_for_signin',email);
     errEl.style.color='#22C55E';
-    errEl.textContent='Check your email — link sent to '+email;
+    errEl.textContent='Login Link sent to '+email+' — check your inbox (and spam). Email will be from noreply@earlytube.firebaseapp.com';
     btn.textContent='Resend';btn.disabled=false;
   }).catch(function(e){
     btn.textContent='Send me a sign-in link';btn.disabled=false;
